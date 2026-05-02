@@ -2,6 +2,7 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer;
 
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -70,39 +71,58 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         }
 
         if (Bukkit.getPluginManager().isPluginEnabled("JustEnoughGuide")) {
-            SaveditemsGroup itemGroup = new SaveditemsGroup(
-                    new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "saveditems"), new CustomItemStack(
-                    Material.COMMAND_BLOCK,
-                    "&c保存的物品 (RSC saveditems)"
-            )
-            );
+            ExceptionHandler.info("已检测到JustEnoughGuide，正在适配...");
+            try {
+                SaveditemsGroup itemGroup = new SaveditemsGroup(
+                        new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "saveditems"), new CustomItemStack(
+                        Material.COMMAND_BLOCK,
+                        "&c保存的物品 (RSC saveditems)"
+                )
+                );
 
-            SaveditemsGroup.instance = itemGroup;
+                SaveditemsGroup.instance = itemGroup;
 
-            for (ProjectAddon addon : addonManager.getAllAddons()) {
-                File[] files = addon.getSavedItemsFolder().listFiles();
-                if (files == null) return;
-                for (File file : Arrays.stream(files).filter(file -> {
-                    return file.isFile() && (file.getName().endsWith(".yml") || file.getName().endsWith("yaml"));
-                }).toList()) {
+                for (ProjectAddon addon : addonManager.getAllAddons()) {
+                    File savedItemsFolder = addon.getSavedItemsFolder();
+                    if (!savedItemsFolder.exists()) continue;
+                    
+                    String prjId = addon.getAddonId();
+                    
                     try {
-                        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-                        ItemStack item = config.getItemStack("item");
-                        if (item != null) {
-                            String rawSource = addon.getAddonId() + "/" + file.getName();
-                            String source = rawSource.substring(0, rawSource.lastIndexOf("."));
-                            item.editMeta(meta -> {
-                                meta.getPersistentDataContainer().set(SaveditemsGroup.SOURCE_KEY, PersistentDataType.STRING, source);
+                        Files.walk(savedItemsFolder.toPath())
+                            .filter(path -> path.toFile().isFile() && 
+                                   (path.toString().endsWith(".yml") || path.toString().endsWith(".yaml")))
+                            .forEach(path -> {
+                                try {
+                                    File file = path.toFile();
+                                    YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+                                    ItemStack item = config.getItemStack("item");
+                                    if (item != null) {
+                                        // 计算相对于saveditems文件夹的路径
+                                        String relativePath = savedItemsFolder.toPath().relativize(path).toString();
+                                        // 移除文件扩展名
+                                        String pathWithoutExt = relativePath.substring(0, relativePath.lastIndexOf("."));
+                                        // 格式: prjId;相对路径
+                                        String source = prjId + ";" + pathWithoutExt;
+                                        
+                                        item.editMeta(meta -> {
+                                            meta.getPersistentDataContainer().set(SaveditemsGroup.SOURCE_KEY, PersistentDataType.STRING, source);
+                                        });
+                                        itemGroup.addItem(item);
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                             });
-                            itemGroup.addItem(item);
-                        }
-                    } catch (Exception e) {
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
-            }
 
-            itemGroup.register(this);
+                itemGroup.register(this);
+            } catch (Exception e) {
+                ExceptionHandler.handleError("JustEnoughGuide版本过低，无法适配", e);
+            }
         }
 
         if (getConfig().getBoolean("pluginUpdate", false)
