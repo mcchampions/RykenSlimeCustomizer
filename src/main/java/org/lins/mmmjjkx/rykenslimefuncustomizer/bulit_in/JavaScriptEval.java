@@ -27,9 +27,6 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.BlockMenuUtil;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 public class JavaScriptEval extends ScriptEval {
-    private static final File PLUGINS_FOLDER =
-            RykenSlimefunCustomizer.INSTANCE.getDataFolder().getParentFile();
-
     private final Context jsEngine = Context.newBuilder("js")
             .hostClassLoader(RykenSlimefunCustomizer.class.getClassLoader())
             .allowAllAccess(true)
@@ -69,14 +66,11 @@ public class JavaScriptEval extends ScriptEval {
         addThing("BlockMenuUtil", env.asHostSymbol(BlockMenuUtil.class));
         addThing("PlayerProfile", env.asHostSymbol(PlayerProfile.class));
         addThing("Slimefun", env.asHostSymbol(Slimefun.class));
-
-        jsEngine.enter();
     }
 
     @Override
     public void close() {
         try {
-            jsEngine.leave();
             jsEngine.close();
         } catch (IllegalStateException ignored) {
         }

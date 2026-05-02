@@ -1,5 +1,7 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.utils;
 
+import io.github.projectunified.uniitem.all.AllItemProvider;
+import io.github.projectunified.uniitem.api.ItemKey;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
@@ -221,6 +223,20 @@ public class CommonUtils {
                             }
                         }
                     }
+                    case "uniitem" -> {
+                        AllItemProvider provider = new AllItemProvider();
+                        String[] split = material.split("::");
+                        ItemStack item = provider.item(new ItemKey(split[0], split[1]));
+                        if (item == null) {
+                            ExceptionHandler.handleError(
+                                    "无法在附属" + addon.getAddonId() + "中读取 UniItem 材料" + material + "，已转为石头");
+                            yield new CustomItemStack(Material.STONE, name, lore);
+                        }
+
+                        item.setAmount(1);
+
+                        yield item;
+                    }
                     case "saveditem" -> {
                         File file = new File(addon.getSavedItemsFolder(), material + ".yml");
                         if (!file.exists()) {
@@ -266,7 +282,6 @@ public class CommonUtils {
 
                         yield itemStack;
                     }
-                        // mc
                     default -> {
                         Optional<Material> materialOptional = Optional.ofNullable(Material.matchMaterial(material));
                         Material mat = Material.STONE;
@@ -515,6 +530,7 @@ public class CommonUtils {
                 count++;
             }
         }
+
         ItemStack[] newArray = new ItemStack[count];
 
         int index = 0;

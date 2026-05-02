@@ -1,13 +1,12 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global;
 
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
-
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.bukkit.Bukkit;
 import org.jetbrains.annotations.Nullable;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 
 public class RecipeTypeMap {
     private static final Map<String, RecipeType> recipeTypes;
@@ -60,7 +59,7 @@ public class RecipeTypeMap {
                 Field field = theClazz.getDeclaredField(fieldName);
                 return (RecipeType) field.get(null);
             } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
-                throw new RuntimeException(e);
+                return null;
             }
         }
 
@@ -74,14 +73,15 @@ public class RecipeTypeMap {
                     if (integration.isStatic) {
                         instance = clazz.getField(fieldName).get(null);
                     } else {
-                        instance = clazz.newInstance(); // or something sus
+                        instance = clazz.newInstance();
                     }
 
                     if (instance instanceof RecipeType rt) {
                         RecipeTypeMap.pushRecipeType(rt);
                     }
                 } catch (Exception e) {
-                    Bukkit.getLogger()
+                    RykenSlimefunCustomizer.INSTANCE
+                            .getLogger()
                             .warning("Failed to get external recipe type from " + className + "#" + fieldName + ": "
                                     + e.getMessage());
                 }
