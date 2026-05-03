@@ -33,6 +33,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 
 import java.util.List;
 
+@SuppressWarnings({"deprecation", "removal"})
 public class SaveditemsGroup extends MixedGroup<@NotNull SaveditemsGroup> {
     public static SaveditemsGroup instance;
     public static final NamespacedKey SOURCE_KEY = new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "source");
@@ -42,18 +43,18 @@ public class SaveditemsGroup extends MixedGroup<@NotNull SaveditemsGroup> {
     }
 
     @Override
-    public boolean isVisible(final Player player, final @NotNull PlayerProfile playerProfile, final SlimefunGuideMode slimefunGuideMode) {
+    public boolean isVisible(final Player player, final @NotNull PlayerProfile playerProfile, final @NotNull SlimefunGuideMode slimefunGuideMode) {
         return player.isOp();
     }
 
     @Override
-    public ChestMenu generateMenu(Player player, PlayerProfile playerProfile, SlimefunGuideMode slimefunGuideMode) {
+    public @NotNull ChestMenu generateMenu(@NotNull Player player, @NotNull PlayerProfile playerProfile, @NotNull SlimefunGuideMode slimefunGuideMode) {
         ChestMenu chestMenu = new ChestMenu(ItemStackHelper.getDisplayName(this.getItem(player)));
         OnClick.preset(chestMenu);
         SlimefunGuideImplementation implementation = GuideUtil.getSlimefunGuide(slimefunGuideMode);
 
         for(int ss : Formats.sub.getChars('b')) {
-            chestMenu.addItem(ss, PatchScope.Back.patch(player, ChestMenuUtils.getBackButton(player, new String[0])));
+            chestMenu.addItem(ss, PatchScope.Back.patch(player, ChestMenuUtils.getBackButton(player)));
             chestMenu.addMenuClickHandler(ss, (pl, s, is, action) -> EventUtil.callEvent(new GuideEvents.BackButtonClickEvent(pl, is, s, action, chestMenu, implementation)).ifSuccess(() -> {
                 GuideHistory guideHistory = playerProfile.getGuideHistory();
                 if (action.isShiftClicked()) {
@@ -107,21 +108,18 @@ public class SaveditemsGroup extends MixedGroup<@NotNull SaveditemsGroup> {
             int index = i + this.page * contentSlots.size() - contentSlots.size();
             if (index < this.objects.size()) {
                 Object o = this.objects.get(index);
-                if (o instanceof SlimefunItem) {
-                    SlimefunItem slimefunItem = (SlimefunItem)o;
-                    OnDisplay.Item.display(player, slimefunItem.getItem(), OnDisplay.Item.Normal, implementation).at(chestMenu, (Integer)contentSlots.get(i), this.page);
-                } else if (o instanceof ItemGroup) {
-                    ItemGroup itemGroup = (ItemGroup)o;
+                if (o instanceof final SlimefunItem slimefunItem) {
+                    OnDisplay.Item.display(player, slimefunItem.getItem(), OnDisplay.Item.Normal, implementation).at(chestMenu, contentSlots.get(i), this.page);
+                } else if (o instanceof final ItemGroup itemGroup) {
                     SlimefunGuideImplementation var14 = GuideUtil.getGuide(player, GuideUtil.getLastGuideMode(player));
-                    if (var14 instanceof JEGSlimefunGuideImplementation) {
-                        JEGSlimefunGuideImplementation guide = (JEGSlimefunGuideImplementation)var14;
-                        guide.showItemGroup0(chestMenu, player, playerProfile, itemGroup, (Integer)contentSlots.get(i));
+                    if (var14 instanceof final JEGSlimefunGuideImplementation guide) {
+                        guide.showItemGroup0(chestMenu, player, playerProfile, itemGroup, contentSlots.get(i));
                     }
-                } else if (o instanceof ItemStack) {
-                    ItemStack itemStack = ((ItemStack) o).clone();
-                    String source = itemStack.getItemMeta().getPersistentDataContainer().get(SOURCE_KEY, PersistentDataType.STRING);
-                    CommonUtils.addLore(itemStack, true, "源: " + source);
-                    OnDisplay.Item.display(player, itemStack, OnDisplay.Item.Normal, implementation).at(chestMenu, (Integer)contentSlots.get(i), this.page);
+                } else if (o instanceof final ItemStack itemStack) {
+                    ItemStack clone = itemStack.clone();
+                    String source = clone.getItemMeta().getPersistentDataContainer().get(SOURCE_KEY, PersistentDataType.STRING);
+                    CommonUtils.addLore(clone, true, "源: " + source);
+                    OnDisplay.Item.display(player, clone, OnDisplay.Item.Normal, implementation).at(chestMenu, contentSlots.get(i), this.page);
 
                     chestMenu.addMenuClickHandler(contentSlots.get(i), (p, s, ik, a) -> {
                         if (p.isOp()) {
