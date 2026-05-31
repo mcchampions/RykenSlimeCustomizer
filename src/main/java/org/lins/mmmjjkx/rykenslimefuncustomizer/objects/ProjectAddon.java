@@ -114,8 +114,8 @@ public final class ProjectAddon {
         loadedObjects++;
     }
 
-    public void setTotalObjects(int totalObjects) {
-        this.totalObjects = totalObjects;
+    public void addTotalObjects(int totalObjects) {
+        this.totalObjects += totalObjects;
     }
 
     public File getScriptsFolder() {
