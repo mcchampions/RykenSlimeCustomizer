@@ -107,6 +107,16 @@ public final class ProjectAddon {
     private List<CustomWorkbench> workbenches = new ArrayList<>();
     // generationInfos.yml
     private List<GenerationInfo> generationInfos = new ArrayList<>();
+    private int loadedObjects;
+    private int totalObjects;
+
+    public void addLoadedObject() {
+        loadedObjects++;
+    }
+
+    public void setTotalObjects(int totalObjects) {
+        this.totalObjects = totalObjects;
+    }
 
     public File getScriptsFolder() {
         File scripts = new File(folder, "scripts");

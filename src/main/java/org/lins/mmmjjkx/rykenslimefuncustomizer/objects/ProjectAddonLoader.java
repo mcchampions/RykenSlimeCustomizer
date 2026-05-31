@@ -310,6 +310,13 @@ public class ProjectAddonLoader {
 
         ExceptionHandler.debugLog("开始注册 " + file.getName() + " 存放的内容...");
 
+        addon.setTotalObjects(mobDropsReader.getSize() + resourceReader.getSize() + itemReader.getSize()
+        + armorReader.getSize() + capacitorsReader.getSize() + foodReader.getSize() + menuReader.getSize()
+        + machineReader.getSize() + generatorReader.getSize() + solarGeneratorReader.getSize()
+        + materialGeneratorReader.getSize() + recipeMachineReader.getSize() + simpleMachineReader.getSize()
+        + multiBlockMachineReader.getSize() + superReader.getSize() + templateMachineReader.getSize()
+        + linkedRecipeMachineReader.getSize() + workbenchReader.getSize() + generationReader.getSize());
+
         addon.setMobDrops(mobDropsReader.readAll());
         addon.setGeoResources(resourceReader.readAll());
         addon.setItems(itemReader.readAll());
@@ -366,7 +373,8 @@ public class ProjectAddonLoader {
             }
         }
 
-        ExceptionHandler.debugLog("加载附属 " + addon.getAddonId() + " 成功!");
+        ExceptionHandler.info("加载附属 " + addon.getAddonId() + " 成功!");
+        ExceptionHandler.info("共 " + addon.getTotalObjects() + " 个配置项，加载成功 " + addon.getLoadedObjects() + " 个配置项");
 
         return addon;
     }

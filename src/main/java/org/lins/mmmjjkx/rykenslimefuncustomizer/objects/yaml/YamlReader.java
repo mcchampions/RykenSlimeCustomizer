@@ -104,12 +104,14 @@ public abstract class YamlReader<T> {
 
             var object = readEach(key);
             if (object != null) {
+                addon.addLoadedObject();
                 objects.add(object);
                 ExceptionHandler.debugLog("&aSUCCESS | 读取项" + key + "成功！");
             } else {
                 ExceptionHandler.debugLog("&cFAILURE | 读取项" + key + "失败！");
             }
         }
+        ExceptionHandler.info("附属" + addon.getAddonId() + " 已加载 " + addon.getLoadedObjects() + "/" + addon.getTotalObjects());
         return objects;
     }
 
@@ -123,12 +125,14 @@ public abstract class YamlReader<T> {
             ExceptionHandler.debugLog("开始读取延迟项：" + key);
             var object = readEach(key);
             if (object != null) {
+                addon.addLoadedObject();
                 objects.add(object);
                 ExceptionHandler.debugLog("&aSUCCESS | 读取项" + key + "成功！");
             } else {
                 ExceptionHandler.debugLog("&cFAILURE | 读取项" + key + "失败！");
             }
         });
+        ExceptionHandler.info("附属" + addon.getAddonId() + " 已加载 " + addon.getLoadedObjects() + "/" + addon.getTotalObjects());
 
         lateInits.clear();
 
@@ -389,5 +393,9 @@ public abstract class YamlReader<T> {
         }
 
         return b;
+    }
+
+    public int getSize() {
+        return configuration.getKeys(false).size();
     }
 }
