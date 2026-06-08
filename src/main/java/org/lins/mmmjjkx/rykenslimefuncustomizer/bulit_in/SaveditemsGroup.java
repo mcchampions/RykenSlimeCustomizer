@@ -130,6 +130,7 @@ public class SaveditemsGroup extends MixedGroup<@NotNull SaveditemsGroup> {
                         if (p.isOp()) {
                             ItemStack item = reference.loadItem();
                             if (item != null) {
+                                removeSource(item);
                                 p.getInventory().addItem(item);
                             }
                         }
@@ -143,7 +144,9 @@ public class SaveditemsGroup extends MixedGroup<@NotNull SaveditemsGroup> {
 
                     chestMenu.addMenuClickHandler(contentSlots.get(i), (p, s, ik, a) -> {
                         if (p.isOp()) {
-                            p.getInventory().addItem(itemStack.clone());
+                            ItemStack item = itemStack.clone();
+                            removeSource(item);
+                            p.getInventory().addItem(item);
                         }
                         return false;
                     });
@@ -159,5 +162,9 @@ public class SaveditemsGroup extends MixedGroup<@NotNull SaveditemsGroup> {
 
         Formats.sub.renderCustom(chestMenu);
         return chestMenu;
+    }
+
+    private void removeSource(ItemStack item) {
+        item.editMeta(meta -> meta.getPersistentDataContainer().remove(SOURCE_KEY));
     }
 }

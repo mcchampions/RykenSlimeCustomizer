@@ -166,6 +166,8 @@ public class JavaScriptEval extends ScriptEval {
     }
 
     private void cacheExecutableFunctions() {
+        functionCache.clear();
+        executableFunctions.clear();
         Value bindings = jsEngine.getBindings("js");
         for (String memberName : bindings.getMemberKeys()) {
             Value member = bindings.getMember(memberName);
