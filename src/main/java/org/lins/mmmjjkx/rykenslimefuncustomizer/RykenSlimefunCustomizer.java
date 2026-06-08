@@ -17,11 +17,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.SavedItemReference;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.SaveditemsGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.commands.MainCommand;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.BlockListener;
@@ -86,29 +84,14 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
                     File savedItemsFolder = addon.getSavedItemsFolder();
                     if (!savedItemsFolder.exists()) continue;
                     
-                    String prjId = addon.getAddonId();
-                    
                     try (var stream = Files.walk(savedItemsFolder.toPath())) {
                             stream.filter(path -> path.toFile().isFile() &&
                                    (path.toString().endsWith(".yml") || path.toString().endsWith(".yaml")))
                             .forEach(path -> {
                                 try {
-                                    File file = path.toFile();
-                                    YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
-                                    ItemStack item = config.getItemStack("item");
-                                    if (item != null) {
-                                        // 计算相对于saveditems文件夹的路径
-                                        String relativePath = savedItemsFolder.toPath().relativize(path).toString();
-                                        // 移除文件扩展名
-                                        String pathWithoutExt = relativePath.substring(0, relativePath.lastIndexOf("."));
-                                        // 格式: prjId;相对路径
-                                        String source = prjId + ";" + pathWithoutExt;
-                                        
-                                        item.editMeta(meta -> {
-                                            meta.getPersistentDataContainer().set(SaveditemsGroup.SOURCE_KEY, PersistentDataType.STRING, source);
-                                        });
-                                        itemGroup.addItem(item);
-                                    }
+                                    String relativePath = savedItemsFolder.toPath().relativize(path).toString();
+                                    String pathWithoutExt = relativePath.substring(0, relativePath.lastIndexOf("."));
+                                    itemGroup.addSavedItem(new SavedItemReference(addon, path.toFile(), pathWithoutExt));
                                 } catch (Exception e) {
                                     ExceptionHandler.handleError("无法读取 " + path, e);
                                 }

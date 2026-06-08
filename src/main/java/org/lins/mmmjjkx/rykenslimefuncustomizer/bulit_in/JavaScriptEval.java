@@ -88,6 +88,11 @@ public class JavaScriptEval extends ScriptEval {
 
     private final Map<String, Value> functionCache = new ConcurrentHashMap<>();
     private final Set<String> failedFunctions = ConcurrentHashMap.newKeySet();
+    private final Set<String> executableFunctions = ConcurrentHashMap.newKeySet();
+
+    public boolean hasFunction(String funName) {
+        return executableFunctions.contains(funName) && !failedFunctions.contains(funName);
+    }
 
     @Nullable @CanIgnoreReturnValue
     @Override
@@ -145,12 +150,24 @@ public class JavaScriptEval extends ScriptEval {
             try {
                 functionCache.clear();
                 failedFunctions.clear();
+                executableFunctions.clear();
 
                 jsEngine.eval(
                         Source.newBuilder("js", getFileContext(), "JavaScript").build());
+                cacheExecutableFunctions();
             } catch (IOException e) {
                 ExceptionHandler.handleError(
                         "在加载" + getAddon().getAddonName() + "的脚本" + getFile().getName() + "时发生错误", e);
+            }
+        }
+    }
+
+    private void cacheExecutableFunctions() {
+        Value bindings = jsEngine.getBindings("js");
+        for (String memberName : bindings.getMemberKeys()) {
+            Value member = bindings.getMember(memberName);
+            if (member != null && member.canExecute()) {
+                executableFunctions.add(memberName);
             }
         }
     }

@@ -1798,6 +1798,9 @@ public class ScriptableEventListener implements Listener {
         public <T extends Event> void invoke(T event) {
             String className = event.getClass().getSimpleName();
             String methodName = "on" + className.replace("Event", "");
+            if (!eval.hasFunction(methodName)) {
+                return;
+            }
 
             Bukkit.getScheduler().runTask(RykenSlimefunCustomizer.INSTANCE, () -> eval.evalFunction(methodName, event));
         }

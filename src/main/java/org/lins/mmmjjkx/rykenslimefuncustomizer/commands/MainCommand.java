@@ -21,11 +21,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.ProjectAddonManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.SavedItemReference;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.SaveditemsGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
@@ -34,6 +36,8 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 public class MainCommand implements TabExecutor {
+    private static final int RESAVE_ITEMS_PER_TICK = 20;
+
     @Override
     public boolean onCommand(
             @NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
@@ -275,25 +279,43 @@ public class MainCommand implements TabExecutor {
                 }
 
                 if (args[1].equalsIgnoreCase("start")) {
-                    List<ItemStack> itemStacks = SaveditemsGroup.instance.getObjects().stream()
-                            .map(x -> (ItemStack) x)
-                            .toList();
-
-                    int cnt = 0;
-                    for (int i = 0; i < itemStacks.size(); i++) {
-                        Location chestLocation = player.getLocation().clone().add((int) (i / 27), -1, 0);
-                        Block block = chestLocation.getBlock();
-                        if (block.getType() != Material.CHEST) {
-                            block.setType(Material.CHEST);
-                        }
-                        BlockState blockState = block.getState();
-                        if (blockState instanceof InventoryHolder holder) {
-                            holder.getInventory().setItem(i % 27, itemStacks.get(i));
-                            cnt++;
-                        }
+                    if (SaveditemsGroup.instance == null) {
+                        sender.sendMessage(CMIChatColor.translate("&4保存物品组尚未初始化！"));
+                        return false;
                     }
 
-                    player.sendMessage(CMIChatColor.translate("&a保存成功！共" + cnt + "个物品，请执行下一步操作"));
+                    List<Object> savedItems = List.copyOf(SaveditemsGroup.instance.getObjects());
+                    int[] nextIndex = {0};
+                    int[] slotIndex = {0};
+                    int[] cnt = {0};
+                    BukkitTask[] task = new BukkitTask[1];
+
+                    task[0] = Bukkit.getScheduler().runTaskTimer(RykenSlimefunCustomizer.INSTANCE, () -> {
+                        int processed = 0;
+                        while (nextIndex[0] < savedItems.size() && processed++ < RESAVE_ITEMS_PER_TICK) {
+                            ItemStack itemStack = getSavedItemStack(savedItems.get(nextIndex[0]++));
+                            if (itemStack == null) {
+                                continue;
+                            }
+
+                            Location chestLocation = player.getLocation().clone().add((int) (slotIndex[0] / 27), -1, 0);
+                            Block block = chestLocation.getBlock();
+                            if (block.getType() != Material.CHEST) {
+                                block.setType(Material.CHEST);
+                            }
+                            BlockState blockState = block.getState();
+                            if (blockState instanceof InventoryHolder holder) {
+                                holder.getInventory().setItem(slotIndex[0] % 27, itemStack);
+                                slotIndex[0]++;
+                                cnt[0]++;
+                            }
+                        }
+
+                        if (nextIndex[0] >= savedItems.size()) {
+                            task[0].cancel();
+                            player.sendMessage(CMIChatColor.translate("&a保存成功！共" + cnt[0] + "个物品，请执行下一步操作"));
+                        }
+                    }, 0L, 1L);
                 } else if (args[1].equalsIgnoreCase("end")) {
                     Bukkit.getScheduler().runTaskLater(RykenSlimefunCustomizer.INSTANCE, () -> {
                     int i = 0;
@@ -326,12 +348,16 @@ public class MainCommand implements TabExecutor {
 
                                     try {
                                         // resave clone
-                                        String prjId = source.split(";")[0];
-                                        String filePath = source.split(";")[1];
+                                        String[] sourceParts = source.split(";", 2);
+                                        if (sourceParts.length != 2) {
+                                            continue;
+                                        }
+                                        String prjId = sourceParts[0];
+                                        String filePath = sourceParts[1];
 
                                         ProjectAddon addon = RykenSlimefunCustomizer.addonManager.get(prjId);
 
-                                        CommonUtils.saveItem(itemStack, filePath, addon);
+                                        CommonUtils.saveItem(clone, filePath, addon);
                                         player.sendMessage(CMIChatColor.translate("&a已重新保存 " + source));
                                         cnt++;
                                     } catch (Exception e) {
@@ -455,6 +481,14 @@ public class MainCommand implements TabExecutor {
             };
         }
         return new ArrayList<>();
+    }
+
+    private @Nullable ItemStack getSavedItemStack(Object object) {
+        return switch (object) {
+            case SavedItemReference reference -> reference.loadItem();
+            case ItemStack item -> item.clone();
+            default -> null;
+        };
     }
 
     private void sendHelp(CommandSender sender) {

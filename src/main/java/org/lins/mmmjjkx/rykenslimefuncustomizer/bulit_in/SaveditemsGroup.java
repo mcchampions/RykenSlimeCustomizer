@@ -42,6 +42,10 @@ public class SaveditemsGroup extends MixedGroup<@NotNull SaveditemsGroup> {
         this.pageMap.put(1, this);
     }
 
+    public void addSavedItem(SavedItemReference reference) {
+        this.objects.add(reference);
+    }
+
     @Override
     public boolean isVisible(final Player player, final @NotNull PlayerProfile playerProfile, final @NotNull SlimefunGuideMode slimefunGuideMode) {
         return player.isOp();
@@ -115,6 +119,22 @@ public class SaveditemsGroup extends MixedGroup<@NotNull SaveditemsGroup> {
                     if (var14 instanceof final JEGSlimefunGuideImplementation guide) {
                         guide.showItemGroup0(chestMenu, player, playerProfile, itemGroup, contentSlots.get(i));
                     }
+                } else if (o instanceof final SavedItemReference reference) {
+                    ItemStack itemStack = reference.getDisplayItem();
+                    ItemStack clone = itemStack.clone();
+                    String source = clone.getItemMeta().getPersistentDataContainer().get(SOURCE_KEY, PersistentDataType.STRING);
+                    CommonUtils.addLore(clone, true, "Source: " + source);
+                    OnDisplay.Item.display(player, clone, OnDisplay.Item.Normal, implementation).at(chestMenu, contentSlots.get(i), this.page);
+
+                    chestMenu.addMenuClickHandler(contentSlots.get(i), (p, s, ik, a) -> {
+                        if (p.isOp()) {
+                            ItemStack item = reference.loadItem();
+                            if (item != null) {
+                                p.getInventory().addItem(item);
+                            }
+                        }
+                        return false;
+                    });
                 } else if (o instanceof final ItemStack itemStack) {
                     ItemStack clone = itemStack.clone();
                     String source = clone.getItemMeta().getPersistentDataContainer().get(SOURCE_KEY, PersistentDataType.STRING);
