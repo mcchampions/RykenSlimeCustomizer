@@ -10,14 +10,16 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 public final class SavedItemReference {
+    private static final long RETRY_DELAY_MILLIS = 30_000L;
+
     private final ProjectAddon addon;
     private final File file;
     private final String pathWithoutExtension;
     private final String source;
     private ItemStack cachedItem;
     private ItemStack cachedDisplayItem;
-    private boolean loadAttempted;
     private boolean warningLogged;
+    private long nextRetryTimeMillis;
 
     public SavedItemReference(ProjectAddon addon, File file, String pathWithoutExtension) {
         this.addon = addon;
@@ -31,22 +33,29 @@ public final class SavedItemReference {
     }
 
     public @Nullable ItemStack loadItem() {
-        if (loadAttempted) {
-            return cachedItem == null ? null : cachedItem.clone();
+        if (cachedItem != null) {
+            return cachedItem.clone();
         }
 
-        loadAttempted = true;
+        long now = System.currentTimeMillis();
+        if (now < nextRetryTimeMillis) {
+            return null;
+        }
+
         try {
             ItemStack item = YamlConfiguration.loadConfiguration(file).getItemStack("item");
             if (item == null) {
+                nextRetryTimeMillis = now + RETRY_DELAY_MILLIS;
                 return null;
             }
 
             item.editMeta(meta -> meta.getPersistentDataContainer()
                     .set(SaveditemsGroup.SOURCE_KEY, PersistentDataType.STRING, source()));
             cachedItem = item;
+            cachedDisplayItem = item;
             return item.clone();
         } catch (Exception e) {
+            nextRetryTimeMillis = now + RETRY_DELAY_MILLIS;
             logLoadWarning(e);
             return null;
         }
@@ -68,7 +77,6 @@ public final class SavedItemReference {
             meta.setDisplayName("Cannot read saved item");
             meta.getPersistentDataContainer().set(SaveditemsGroup.SOURCE_KEY, PersistentDataType.STRING, source());
         });
-        cachedDisplayItem = fallback;
         return fallback.clone();
     }
 

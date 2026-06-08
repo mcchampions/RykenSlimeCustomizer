@@ -123,6 +123,9 @@ public class JavaScriptEval extends ScriptEval {
 
         try {
             Object result = function.execute(args);
+            if ("init".equals(funName)) {
+                cacheExecutableFunctions();
+            }
             ExceptionHandler.debugLog(
                     "运行了 " + getAddon().getAddonName() + "的脚本" + getFile().getName() + "中的函数 " + funName);
             return result;
@@ -168,6 +171,7 @@ public class JavaScriptEval extends ScriptEval {
             Value member = bindings.getMember(memberName);
             if (member != null && member.canExecute()) {
                 executableFunctions.add(memberName);
+                failedFunctions.remove(memberName);
             }
         }
     }

@@ -289,6 +289,7 @@ public class MainCommand implements TabExecutor {
                     int[] slotIndex = {0};
                     int[] cnt = {0};
                     BukkitTask[] task = new BukkitTask[1];
+                    Location origin = player.getLocation().clone();
 
                     task[0] = Bukkit.getScheduler().runTaskTimer(RykenSlimefunCustomizer.INSTANCE, () -> {
                         int processed = 0;
@@ -298,7 +299,7 @@ public class MainCommand implements TabExecutor {
                                 continue;
                             }
 
-                            Location chestLocation = player.getLocation().clone().add((int) (slotIndex[0] / 27), -1, 0);
+                            Location chestLocation = origin.clone().add((int) (slotIndex[0] / 27), -1, 0);
                             Block block = chestLocation.getBlock();
                             if (block.getType() != Material.CHEST) {
                                 block.setType(Material.CHEST);
@@ -317,12 +318,13 @@ public class MainCommand implements TabExecutor {
                         }
                     }, 0L, 1L);
                 } else if (args[1].equalsIgnoreCase("end")) {
+                    Location origin = player.getLocation().clone();
                     Bukkit.getScheduler().runTaskLater(RykenSlimefunCustomizer.INSTANCE, () -> {
                     int i = 0;
                     int cnt = 0;
                     int offsetY = -1;
                     while (true) {
-                        Location chestLocation = player.getLocation().clone().add(i++, offsetY, 0);
+                        Location chestLocation = origin.clone().add(i++, offsetY, 0);
                         Block block = chestLocation.getBlock();
                         if (block.getType() != Material.CHEST) {
                             if (offsetY == -1) {
