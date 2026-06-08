@@ -82,17 +82,16 @@ public abstract class YamlReader<T> {
     }
 
     public final List<T> readAll() {
+        ExceptionHandler.info("正在加载" + addon.getAddonId() + "/" + this.getClass().getSimpleName().substring(0, this.getClass().getSimpleName().length() - 6));
         List<T> objects = new ArrayList<>();
         for (String key : configuration.getKeys(false)) {
             ConfigurationSection section = configuration.getConfigurationSection(key);
             if (section == null) continue;
 
-            ExceptionHandler.debugLog("开始读取项: " + key);
+            ExceptionHandler.debugLog("开始读取配置: " + key);
 
             ConfigurationSection register = section.getConfigurationSection("register");
             if (!checkForRegistration(key, register)) continue;
-
-            ExceptionHandler.debugLog("检查延迟加载...");
 
             if (section.getBoolean("lateInit", false)) {
                 putLateInit(key);
@@ -100,16 +99,16 @@ public abstract class YamlReader<T> {
                 continue;
             }
 
-            ExceptionHandler.debugLog("开始读取...");
-
             var object = readEach(key);
             if (object != null) {
+                addon.addLoadedObject();
                 objects.add(object);
                 ExceptionHandler.debugLog("&aSUCCESS | 读取项" + key + "成功！");
             } else {
                 ExceptionHandler.debugLog("&cFAILURE | 读取项" + key + "失败！");
             }
         }
+        ExceptionHandler.info("附属" + addon.getAddonId() + " 已加载 " + getLoadingProgress(addon));
         return objects;
     }
 
@@ -118,17 +117,20 @@ public abstract class YamlReader<T> {
     }
 
     public List<T> loadLateInits() {
+        ExceptionHandler.info("正在加载延迟项 " + addon.getAddonId() + "/" + this.getClass().getSimpleName().substring(0, this.getClass().getSimpleName().length() - 6));
         List<T> objects = new ArrayList<>();
         lateInits.forEach(key -> {
-            ExceptionHandler.debugLog("开始读取延迟项：" + key);
+            ExceptionHandler.debugLog("开始读取配置：" + key);
             var object = readEach(key);
             if (object != null) {
+                addon.addLoadedObject();
                 objects.add(object);
                 ExceptionHandler.debugLog("&aSUCCESS | 读取项" + key + "成功！");
             } else {
                 ExceptionHandler.debugLog("&cFAILURE | 读取项" + key + "失败！");
             }
         });
+        ExceptionHandler.info("附属" + addon.getAddonId() + " 已加载 " + getLoadingProgress(addon));
 
         lateInits.clear();
 
@@ -389,5 +391,13 @@ public abstract class YamlReader<T> {
         }
 
         return b;
+    }
+
+    public int getSize() {
+        return configuration.getKeys(false).size();
+    }
+
+    private static String getLoadingProgress(ProjectAddon addon) {
+        return addon.getLoadedObjects() + "/" + addon.getTotalObjects() + " (" + ((int)(((double)addon.getLoadedObjects())/addon.getTotalObjects()*1000))/100.0D + "%)";
     }
 }

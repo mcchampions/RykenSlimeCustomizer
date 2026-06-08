@@ -109,7 +109,18 @@ public class ExceptionHandler {
     public static <T extends Enum<T>> Pair<HandleResult, T> handleEnumValueOf(
             String msg, Class<T> enumClass, String name) {
         try {
-            return new Pair<>(HandleResult.SUCCESS, Enum.valueOf(enumClass, name.toUpperCase()));
+            if (name.contains("|")) {
+                String[] names = name.split("\\|");
+                for (String n : names) {
+                    try {
+                        return new Pair<>(HandleResult.SUCCESS, Enum.valueOf(enumClass, n.trim().toUpperCase()));
+                    } catch (NullPointerException | IllegalArgumentException ignored) {
+                    }
+                }
+                handleError(msg);
+            } else {
+                return new Pair<>(HandleResult.SUCCESS, Enum.valueOf(enumClass, name.toUpperCase()));
+            }
         } catch (NullPointerException | IllegalArgumentException e) {
             handleError(msg);
         }

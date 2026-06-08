@@ -6,6 +6,8 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerHead;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerSkin;
+
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.List;
 import java.util.Random;
@@ -51,7 +53,7 @@ public class BlockPopulator extends org.bukkit.generator.BlockPopulator {
             return;
         }
 
-        List<ProjectAddon> addons = RykenSlimefunCustomizer.addonManager.getAllValues();
+        List<ProjectAddon> addons = RykenSlimefunCustomizer.addonManager.getAllAddons();
 
         for (ProjectAddon addon : addons) {
             List<GenerationInfo> generationInfos = addon.getGenerationInfos();
@@ -121,7 +123,11 @@ public class BlockPopulator extends org.bukkit.generator.BlockPopulator {
                     PlayerTextures textures = profile.getTextures();
                     URL skin = textures.getSkin();
                     if (skin != null) {
-                        PlayerHead.setSkin(block, PlayerSkin.fromURL(skin.toString()), false);
+                        try {
+                            PlayerHead.setSkin(block, PlayerSkin.fromURL(skin.toString()), false);
+                        } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }

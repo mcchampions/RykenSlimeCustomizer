@@ -49,7 +49,7 @@ public class ProjectAddonLoader {
         ProjectAddon addon;
         YamlConfiguration info = doFileLoad(file, Constants.INFO_FILE);
 
-        ExceptionHandler.debugLog("开始读取文件夹 " + file.getName() + " 中的项目信息...");
+        ExceptionHandler.info("开始读取文件夹 " + file.getName() + " 中的项目信息...");
 
         if (info.contains("name") && info.contains("version") && info.contains("id")) {
             String name = info.getString("name");
@@ -235,14 +235,16 @@ public class ProjectAddonLoader {
             return null;
         }
 
-        ExceptionHandler.debugLog("读取完成，开始加载附属 " + addon.getAddonId() + " 中的内容...");
+        ExceptionHandler.info("读取完成，开始加载附属 " + addon.getAddonId() + " 中的内容...");
 
         YamlConfiguration groups = doFileLoad(file, Constants.GROUPS_FILE);
         ItemGroupReader groupReader = new ItemGroupReader(groups, addon);
+        addon.addTotalObjects(groupReader.getSize());
         addon.setItemGroups(groupReader.readAll());
 
         YamlConfiguration recipeTypes = doFileLoad(file, Constants.RECIPE_TYPES_FILE);
         RecipeTypesReader recipeTypesReader = new RecipeTypesReader(recipeTypes, addon);
+        addon.addTotalObjects(recipeTypesReader.getSize());
         addon.setRecipeTypes(recipeTypesReader.readAll());
         RecipeTypeMap.pushRecipeType(addon.getRecipeTypes());
 
@@ -287,7 +289,13 @@ public class ProjectAddonLoader {
         WorkbenchReader workbenchReader = new WorkbenchReader(workbenches, addon);
         GenerationReader generationReader = new GenerationReader(generations, addon);
 
-        ExceptionHandler.debugLog("开始加载 " + file.getName() + " 中的物品内容...");
+        ExceptionHandler.info("开始加载 " + file.getName() + " 中的物品内容...");
+        addon.addTotalObjects(mobDropsReader.getSize() + resourceReader.getSize() + itemReader.getSize()
+                                      + armorReader.getSize() + capacitorsReader.getSize() + foodReader.getSize() + menuReader.getSize()
+                                      + machineReader.getSize() + generatorReader.getSize() + solarGeneratorReader.getSize()
+                                      + materialGeneratorReader.getSize() + recipeMachineReader.getSize() + simpleMachineReader.getSize()
+                                      + multiBlockMachineReader.getSize() + superReader.getSize() + templateMachineReader.getSize()
+                                      + linkedRecipeMachineReader.getSize() + workbenchReader.getSize() + generationReader.getSize());
 
         mobDropsReader.preload();
         resourceReader.preload();
@@ -308,7 +316,7 @@ public class ProjectAddonLoader {
         workbenchReader.preload();
         generationReader.preload();
 
-        ExceptionHandler.debugLog("开始注册 " + file.getName() + " 存放的内容...");
+        ExceptionHandler.info("开始注册 " + file.getName() + " 存放的内容...");
 
         addon.setMobDrops(mobDropsReader.readAll());
         addon.setGeoResources(resourceReader.readAll());
@@ -330,7 +338,7 @@ public class ProjectAddonLoader {
         addon.setWorkbenches(workbenchReader.readAll());
         addon.setGenerationInfos(generationReader.readAll());
 
-        ExceptionHandler.debugLog("开始加载要求延迟加载的内容...");
+        ExceptionHandler.info("开始加载要求延迟加载的内容...");
 
         // late inits
         addon.getMobDrops().addAll(mobDropsReader.loadLateInits());
@@ -366,7 +374,8 @@ public class ProjectAddonLoader {
             }
         }
 
-        ExceptionHandler.debugLog("加载附属 " + addon.getAddonId() + " 成功!");
+        ExceptionHandler.info("加载附属 " + addon.getAddonId() + " 成功!");
+        ExceptionHandler.info("共 " + addon.getTotalObjects() + " 个配置项，加载成功 " + addon.getLoadedObjects() + " 个配置项");
 
         return addon;
     }
