@@ -398,6 +398,6 @@ public abstract class YamlReader<T> {
     }
 
     private static String getLoadingProgress(ProjectAddon addon) {
-        return addon.getLoadedObjects() + "/" + addon.getTotalObjects() + " (" + ((int)(((double)addon.getLoadedObjects())/addon.getTotalObjects()*1000))/100.0D + "%)";
+        return addon.getLoadedObjects() + "/" + addon.getTotalObjects() + " (" + ((int)(((double)addon.getLoadedObjects())/addon.getTotalObjects()*10000))/100.0D + "%)";
     }
 }
