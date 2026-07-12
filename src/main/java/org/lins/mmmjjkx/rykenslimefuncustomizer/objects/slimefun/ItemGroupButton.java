@@ -147,7 +147,7 @@ public class ItemGroupButton extends SubItemGroup {
                             ExceptionHandler.handleWarning(
                                     "在" + getKey().getKey() + "物品组按钮中发现执行脚本时遇到了问题: " + "找不到脚本文件 " + file.getName());
                         } else {
-                            eval = new JavaScriptEval(file, addon);
+                            eval = JavaScriptEval.create(file, addon);
                         }
 
                         if (eval != null) {

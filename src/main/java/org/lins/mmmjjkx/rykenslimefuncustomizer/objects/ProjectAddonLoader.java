@@ -164,7 +164,7 @@ public class ProjectAddonLoader {
             if (!scriptListener.isBlank()) {
                 File file = new File(addon.getScriptsFolder(), scriptListener + ".js");
                 if (file.exists()) {
-                    JavaScriptEval eval = new JavaScriptEval(file, addon);
+                    JavaScriptEval eval = JavaScriptEval.create(file, addon);
 
                     // First letter to uppercase
                     String listenerName = scriptListener.replaceFirst(
@@ -224,7 +224,7 @@ public class ProjectAddonLoader {
                 }
 
                 File scriptHandler = new File(addon.getScriptsFolder(), "configHandler.js");
-                ScriptEval eval = scriptHandler.exists() ? new JavaScriptEval(scriptHandler, addon) : null;
+                ScriptEval eval = scriptHandler.exists() ? JavaScriptEval.create(scriptHandler, addon) : null;
                 CustomAddonConfig customConfigObj = new CustomAddonConfig(customConfig, customConfigYaml, eval);
 
                 YamlConfiguration dest = YamlConfiguration.loadConfiguration(customConfig);

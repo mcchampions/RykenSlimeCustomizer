@@ -65,7 +65,7 @@ public class JavaScriptEval extends ScriptEval {
             .currentWorkingDirectory(getAddon().getScriptsFolder().toPath().toAbsolutePath())
             .build();
 
-    public JavaScriptEval(@NotNull File js, ProjectAddon addon) {
+    private JavaScriptEval(@NotNull File js, ProjectAddon addon) {
         super(js, addon);
 
         advancedSetup();
@@ -75,6 +75,15 @@ public class JavaScriptEval extends ScriptEval {
         contextInit();
 
         addon.getScriptEvals().add(this);
+    }
+
+    public static JavaScriptEval create(@NotNull File js, ProjectAddon addon) {
+        try {
+            return new JavaScriptEval(js, addon);
+        } catch (Throwable e) {
+            ExceptionHandler.handleError("无法加载脚本 " + js.getAbsolutePath(), e);
+            return null;
+        }
     }
 
     private void advancedSetup() {

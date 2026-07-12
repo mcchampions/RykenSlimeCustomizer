@@ -71,7 +71,7 @@ public class FoodReader extends YamlReader<CustomFood> {
                 ExceptionHandler.handleWarning(
                         "在附属" + addon.getAddonId() + "中加载食物" + s + "时遇到了问题: " + "找不到脚本文件 " + file.getName());
             } else {
-                eval = new JavaScriptEval(file, addon);
+                eval = JavaScriptEval.create(file, addon);
             }
         }
 

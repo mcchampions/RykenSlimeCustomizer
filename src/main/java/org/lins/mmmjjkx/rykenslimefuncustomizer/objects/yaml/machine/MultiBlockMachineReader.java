@@ -117,7 +117,7 @@ public class MultiBlockMachineReader extends YamlReader<CustomMultiBlockMachine>
                 ExceptionHandler.handleWarning(
                         "在附属" + addon.getAddonId() + "中加载多方块机器" + s + "时遇到了问题: " + "找不到脚本文件 " + file.getName());
             } else {
-                eval = new JavaScriptEval(file, addon);
+                eval = JavaScriptEval.create(file, addon);
             }
         }
 

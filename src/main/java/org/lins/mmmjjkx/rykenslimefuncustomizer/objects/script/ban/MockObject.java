@@ -19,6 +19,7 @@ import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Contract;
@@ -27,6 +28,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.*;
 
 public class MockObject {
@@ -77,7 +79,7 @@ public class MockObject {
 
     public static <T> T mockOne(@Nullable T obj) {
         for (var entry : mocks.entrySet()) {
-            if (obj.getClass().isAssignableFrom(entry.getKey())) {
+            if (entry.getKey().isAssignableFrom(obj.getClass())) {
                 try {
                     return ((Mocker<T>) entry.getValue()).mock(obj);
                 } catch (InstantiationException | IllegalAccessException e) {
@@ -131,7 +133,8 @@ public class MockObject {
                 Location.class,
                 Block.class,
                 BlockMenu.class,
-                SlimefunBlockData.class
+                SlimefunBlockData.class,
+                Event.class
         );
 
         for (Class<?> clazz : listenClasses) {
@@ -148,8 +151,8 @@ public class MockObject {
 
     public static class PluginManagerMocker implements Mocker<PluginManager> {
         @Override
-        public PluginManager mock(PluginManager delegate) throws InstantiationException, IllegalAccessException{
-            return new PluginManagerMock(delegate).mock().newInstance();
+        public PluginManager mock(PluginManager delegate) throws InstantiationException, IllegalAccessException {
+            return new PluginManagerMock(delegate).mock();
         }
     }
 
@@ -190,8 +193,8 @@ public class MockObject {
 
         @Override
         @Contract(pure = true)
-        public T mock(T delegate) throws InstantiationException, IllegalAccessException{
-            return new RestrictedMock<T>(delegate, clazz, prechecker, allowedMethodList).mock().newInstance();
+        public T mock(T delegate) throws InstantiationException, IllegalAccessException {
+            return new RestrictedMock<T>(delegate, clazz, prechecker, allowedMethodList).mock();
         }
     }
 
@@ -204,7 +207,7 @@ public class MockObject {
         @Override
         @Contract(pure = true)
         public T mock(T delegate) throws InstantiationException, IllegalAccessException {
-            return new BanMock<T>(delegate, clazz, prechecker, banMethodList).mock().newInstance();
+            return new BanMock<T>(delegate, clazz, prechecker, banMethodList).mock();
         }
     }
 
@@ -301,28 +304,37 @@ public class MockObject {
         }
 
         @Contract(pure = true)
-        default Class<T> mock() {
+        default T mock() throws InstantiationException, IllegalAccessException {
             ByteBuddy builder = new ByteBuddy();
             DynamicType.Builder<?> dynamic;
 
-            if (extend().isInterface()) {
-                dynamic = builder.subclass(Object.class).implement(extend());
+            Class<?> clazz = delegate().getClass();
+            while (Modifier.isFinal(clazz.getModifiers()) && clazz != Object.class) {
+                clazz = clazz.getSuperclass();
+            }
+
+            if (Modifier.isFinal(clazz.getModifiers())) {
+                clazz = extend();
+            }
+
+            if (clazz.isInterface()) {
+                dynamic = builder.subclass(Object.class).implement(clazz);
             } else {
-                dynamic = builder.subclass(extend());
+                dynamic = builder.subclass(clazz);
             }
 
             dynamic = dynamic
-            .name("Mocked" + extend().getSimpleName())
+            .name("Mocked" + clazz.getSimpleName())
             .implement(Restriction.class)
             .method(ElementMatchers.not(ElementMatchers.isDeclaredBy(Object.class)))
             .intercept(MethodDelegation.to(new Interceptor(this)));
 
-            Class<?> clazz;
+            Class<?> instanceClazz;
             try (DynamicType.Unloaded<?> unloaded = dynamic.make()) {
-                clazz = unloaded.load(RykenSlimefunCustomizer.INSTANCE.getJavaPlugin().getClass().getClassLoader()).getLoaded();
+                instanceClazz = unloaded.load(RykenSlimefunCustomizer.INSTANCE.getJavaPlugin().getClass().getClassLoader()).getLoaded();
             }
 
-            return (Class<T>) clazz;
+            return ((Class<T>) instanceClazz).newInstance();
         }
     }
 
