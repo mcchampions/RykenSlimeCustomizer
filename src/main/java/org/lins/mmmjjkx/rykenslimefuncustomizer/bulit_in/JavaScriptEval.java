@@ -41,6 +41,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ban.MockObject;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.BlockMenuUtil;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ClassUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
@@ -139,9 +140,7 @@ public class JavaScriptEval extends ScriptEval {
 
         try {
             for (int i = 0; i < args.length; i++) {
-                if (args[i] instanceof Player player) {
-                    args[i] = ClassUtils.wrapPlayer(player);
-                }
+                args[i] = MockObject.mock(args[i]);
             }
             Object result = function.execute(args);
             ExceptionHandler.debugLog(

@@ -31,6 +31,7 @@ import java.nio.file.Files;
 import java.security.Permission;
 import java.security.Permissions;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
 import java.util.stream.IntStream;
@@ -40,6 +41,8 @@ import me.clip.placeholderapi.PlaceholderAPI;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -50,10 +53,11 @@ import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ban.MockObject;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.enhanced.NBTAPIIntegration;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.CiConsumer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.CiFunction;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ClassUtils;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 @Getter(AccessLevel.PROTECTED)
 public abstract class ScriptEval {
@@ -87,7 +91,7 @@ public abstract class ScriptEval {
                 .denyAccess(ClassLoader.class)
                 .denyAccess(Permission.class)
                 .denyAccess(Permissions.class)
-                .denyAccess(PluginManager.class);
+                .denyAccess(Bukkit.class);
 
         denyLuckPerms(builder);
         denyGroupManager(builder);
@@ -178,20 +182,29 @@ public abstract class ScriptEval {
     }
 
     protected final void setup() {
-        addThing("server", ClassUtils.wrapServer(Bukkit.getServer()));
+        addThing("server", MockObject.mock(Bukkit.getServer()));
 
         // functions
         addThing("isPluginLoaded", (Function<String, Boolean>)
                 s -> Bukkit.getPluginManager().isPluginEnabled(s));
 
+        addThing("getServer", (Supplier<Server>) () ->
+                MockObject.mock(Bukkit.getServer()));
+
         addThing("runOpCommand", (BiConsumer<Player, String>) (p, s) -> {
-            Player realPlayer = ClassUtils.unwrap(p);
-            boolean op = realPlayer.isOp();
-            realPlayer.setOp(true);
+            if (!(p instanceof MockObject.Restriction restriction)) {
+                ExceptionHandler.handleError("You have to use getPlayer(String) or getPlayer(UUID) to get a player instance. This runOpCommand operation has been cancelled");
+                return;
+            }
+
+            restriction.disableRestriction();
+            boolean op = p.isOp();
+            p.setOp(true);
             try {
-                realPlayer.performCommand(parsePlaceholder(realPlayer, s));
+                p.performCommand(parsePlaceholder(p, s));
             } finally {
-                realPlayer.setOp(op);
+                p.setOp(op);
+                restriction.enableRestriction();
             }
         });
 
@@ -237,9 +250,9 @@ public abstract class ScriptEval {
         // StorageCacheUtils functions
         // removal
         addThing("setData", (CiConsumer<Location, String, String>) StorageCacheUtils::setData);
-        addThing("getData", (BiFunction<Location, String, String>) StorageCacheUtils::getData);
-        addThing("getBlockMenu", (Function<Location, BlockMenu>) StorageCacheUtils::getMenu);
-        addThing("getBlockData", (Function<Location, SlimefunBlockData>) StorageCacheUtils::getBlock);
+        addThing("getData", (BiFunction<Location, String, String>) (a, b) -> MockObject.mock(StorageCacheUtils.getData(a, b)));
+        addThing("getBlockMenu", (Function<Location, BlockMenu>) a -> MockObject.mock(StorageCacheUtils.getMenu(a)));
+        addThing("getBlockData", (Function<Location, SlimefunBlockData>) a -> MockObject.mock(StorageCacheUtils.getBlock(a)));
         addThing("isSlimefunBlock", (Function<Location, Boolean>) StorageCacheUtils::hasBlock);
         addThing("isBlock", (BiFunction<Location, String, Boolean>) StorageCacheUtils::isBlock);
         addThing("getSfItemByBlock", (Function<Location, SlimefunItem>) StorageCacheUtils::getSfItem);
