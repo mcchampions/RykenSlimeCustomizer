@@ -20,6 +20,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
+import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Contract;
@@ -129,12 +130,7 @@ public class MockObject {
         List<Class<?>> listenClasses = List.of(
                 Entity.class,
                 CommandSender.class,
-                JavaPlugin.class,
-                Location.class,
-                Block.class,
-                BlockMenu.class,
-                SlimefunBlockData.class,
-                Event.class
+                Block.class
         );
 
         for (Class<?> clazz : listenClasses) {
@@ -309,11 +305,11 @@ public class MockObject {
             DynamicType.Builder<?> dynamic;
 
             Class<?> clazz = delegate().getClass();
-            while (Modifier.isFinal(clazz.getModifiers()) && clazz != Object.class) {
+            while (Modifier.isFinal(clazz.getModifiers()) && clazz != Object.class && Arrays.stream(clazz.getDeclaredConstructors()).noneMatch(ctor -> ctor.getParameterCount() == 0)) {
                 clazz = clazz.getSuperclass();
             }
 
-            if (Modifier.isFinal(clazz.getModifiers())) {
+            if (Modifier.isFinal(clazz.getModifiers()) && Arrays.stream(clazz.getDeclaredConstructors()).noneMatch(ctor -> ctor.getParameterCount() == 0)) {
                 clazz = extend();
             }
 
