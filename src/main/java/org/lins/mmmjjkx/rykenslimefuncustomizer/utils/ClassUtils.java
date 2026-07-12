@@ -55,7 +55,9 @@ public class ClassUtils {
             "createWorld",
             "unloadWorld",
             "clearRecipes",
-            "resetRecipes");
+            "resetRecipes",
+            "getPlayer",
+            "getPlayerExact");
 
     public static final List<String> PLAYER_BANNED_METHODS =
             List.of("kickPlayer", "banPlayer", "setOp", "performCommand", "chat", "hidePlayer", "showPlayer");
@@ -122,7 +124,7 @@ public class ClassUtils {
     public static Server wrapServer(Server server) {
         try {
             Class<? extends Server> agentClass = generateAgentClass(
-                    server.getClass(),
+                    Server.class,
                     "org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.agent.ServerAgent",
                     SERVER_BANNED_METHODS);
             return (Server) agentClass.getDeclaredConstructors()[0].newInstance(server);
@@ -134,7 +136,7 @@ public class ClassUtils {
     public static Player wrapPlayer(Player player) {
         try {
             Class<? extends Player> agentClass = generateAgentClass(
-                    player.getClass(),
+                    Player.class,
                     "org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.agent.PlayerAgent",
                     PLAYER_BANNED_METHODS);
             return (Player) agentClass.getDeclaredConstructors()[0].newInstance(player);
