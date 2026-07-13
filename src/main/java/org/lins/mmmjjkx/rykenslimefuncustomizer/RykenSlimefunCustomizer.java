@@ -202,7 +202,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         Library byteBuddy = Library.builder()
                 .groupId("net{}bytebuddy")
                 .artifactId("byte-buddy")
-                .version("1.17.6")
+                .version("1.18.11")
                 .build();
         Library graalJS = Library.builder()
                 .groupId("org{}graalvm{}js")
