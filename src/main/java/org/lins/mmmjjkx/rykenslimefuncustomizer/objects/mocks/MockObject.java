@@ -338,6 +338,31 @@ public class MockObject {
         return m.invoke(delegate, args);
     }
 
+    public static <T> T unmock(@Nullable T obj) {
+        if (obj == null) return null;
+        if (obj.getClass().getSimpleName().startsWith("Mocked")) {
+            try {
+                return (T) obj.getClass().getMethod("delegate").invoke(obj);
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return obj;
+    }
+
+    public static boolean equals(Object instance1, Object instance2) {
+        instance1 = MockObject.unmock(instance1);
+        instance2 = MockObject.unmock(instance2);
+
+        return Objects.equals(instance1, instance2);
+    }
+
+    public static int hashCode(Object obj) {
+        Object unmocked = MockObject.unmock(obj);
+        return Objects.hashCode(unmocked);
+    }
+
     public interface Mock<T> {
         @Contract(pure = true)
         T delegate();
@@ -358,6 +383,15 @@ public class MockObject {
             if (prechecker() != null && !prechecker().precheck(method, args, instance)) {
                 return null;
             }
+
+            if (method.getName().equals("equals") && args.length == 1) {
+                return MockObject.equals(args[0], instance);
+            }
+
+            if (method.getName().equals("hashCode") && args.length == 0) {
+                return MockObject.hashCode(instance);
+            }
+
             return MockObject.mock(invokeSuperMethod(method, delegate(), args));
         }
 
