@@ -54,8 +54,6 @@ public class CustomUnplaceableItem extends CustomItem implements NotPlaceable {
                 eval.evalFunction("onWeaponHit", e, p, it);
             });
             this.addItemHandler((ToolUseHandler) (e, it, i, drops) -> eval.evalFunction("onToolUse", e, it, i, drops));
-        } else {
-            this.addItemHandler((ItemUseHandler) PlayerRightClickEvent::cancel);
         }
 
         this.constructorArgs = new Object[] {itemGroup, item, recipeType, recipe, eval, recipeOutput};
