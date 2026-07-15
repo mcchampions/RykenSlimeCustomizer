@@ -1,3 +1,20 @@
+/*
+ * RykenSlimefunCustomizer
+ * Copyright (C) 2026 lijinhong11(mmmjjjkx) and balugaq
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.slimefun;
 
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
@@ -130,7 +147,7 @@ public class ItemGroupButton extends SubItemGroup {
                             ExceptionHandler.handleWarning(
                                     "在" + getKey().getKey() + "物品组按钮中发现执行脚本时遇到了问题: " + "找不到脚本文件 " + file.getName());
                         } else {
-                            eval = new JavaScriptEval(file, addon);
+                            eval = JavaScriptEval.create(file, addon);
                         }
 
                         if (eval != null) {

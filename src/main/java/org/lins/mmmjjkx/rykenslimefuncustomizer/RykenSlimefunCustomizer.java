@@ -1,15 +1,30 @@
+/*
+ * RykenSlimefunCustomizer
+ * Copyright (C) 2026 lijinhong11(mmmjjjkx) and balugaq
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package org.lins.mmmjjkx.rykenslimefuncustomizer;
 
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
+import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Objects;
-
-import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
 import net.byteflux.libby.BukkitLibraryManager;
 import net.byteflux.libby.Library;
 import net.guizhanss.guizhanlib.updater.GuizhanBuildsUpdater;
@@ -72,18 +87,14 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
             ExceptionHandler.info("已检测到JustEnoughGuide，正在适配...");
             try {
                 SaveditemsGroup itemGroup = new SaveditemsGroup(
-                        new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "saveditems"), new CustomItemStack(
-                        Material.COMMAND_BLOCK,
-                        "&c保存的物品 (RSC saveditems)"
-                )
-                );
+                        new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, "saveditems"),
+                        new CustomItemStack(Material.COMMAND_BLOCK, "&c保存的物品 (RSC saveditems)"));
 
                 SaveditemsGroup.instance = itemGroup;
 
                 for (ProjectAddon addon : addonManager.getAllAddons()) {
                     File savedItemsFolder = addon.getSavedItemsFolder();
                     if (!savedItemsFolder.exists()) continue;
-                    
                     try (var stream = Files.walk(savedItemsFolder.toPath())) {
                             stream.filter(path -> path.toFile().isFile() &&
                                    (path.toString().endsWith(".yml") || path.toString().endsWith(".yaml")))
@@ -149,11 +160,11 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
 
     @Override
     public String getBugTrackerURL() {
-        return "https://github.com/SlimefunReloadingProject/RykenSlimeCustomizer/issues";
+        return "https://github.com/balugaq/RykenSlimeCustomizer/issues";
     }
 
     private void setupLibraries() {
-        String graalVersion = "25.0.2";
+        String graalVersion = "25.1.3";
         BukkitLibraryManager libraryManager = new BukkitLibraryManager(this);
 
         for (String repo : getConfig().getStringList("repositories")) {
@@ -165,7 +176,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         Library byteBuddy = Library.builder()
                 .groupId("net{}bytebuddy")
                 .artifactId("byte-buddy")
-                .version("1.17.6")
+                .version("1.18.11")
                 .build();
         Library graalJS = Library.builder()
                 .groupId("org{}graalvm{}js")

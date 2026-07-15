@@ -1,3 +1,20 @@
+/*
+ * RykenSlimefunCustomizer
+ * Copyright (C) 2026 lijinhong11(mmmjjjkx) and balugaq
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -22,6 +39,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.mocks.MockObject;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.ScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.BlockMenuUtil;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
@@ -37,13 +55,15 @@ public class JavaScriptEval extends ScriptEval {
             .allowCreateProcess(true)
             .allowValueSharing(true)
             .allowIO(IOAccess.ALL)
-            .allowHostClassLookup(s -> true)
+            .allowHostClassLookup(s -> !s.startsWith("net.luckperms")
+                    && !s.startsWith("me.lucko")
+                    && !s.startsWith("org.anjocaido.groupmanager"))
             .allowHostClassLoading(true)
             .engine(Engine.newBuilder("js").allowExperimentalOptions(true).build())
             .currentWorkingDirectory(getAddon().getScriptsFolder().toPath().toAbsolutePath())
             .build();
 
-    public JavaScriptEval(@NotNull File js, ProjectAddon addon) {
+    private JavaScriptEval(@NotNull File js, ProjectAddon addon) {
         super(js, addon);
 
         advancedSetup();
@@ -53,6 +73,15 @@ public class JavaScriptEval extends ScriptEval {
         contextInit();
 
         addon.getScriptEvals().add(this);
+    }
+
+    public static JavaScriptEval create(@NotNull File js, ProjectAddon addon) {
+        try {
+            return new JavaScriptEval(js, addon);
+        } catch (Throwable e) {
+            ExceptionHandler.handleError("无法加载脚本 " + js.getAbsolutePath(), e);
+            return null;
+        }
     }
 
     private void advancedSetup() {
@@ -122,6 +151,9 @@ public class JavaScriptEval extends ScriptEval {
         }
 
         try {
+            for (int i = 0; i < args.length; i++) {
+                args[i] = MockObject.mock(args[i]);
+            }
             Object result = function.execute(args);
             if ("init".equals(funName)) {
                 cacheExecutableFunctions();
@@ -141,7 +173,11 @@ public class JavaScriptEval extends ScriptEval {
 
     private void handleExecutionError(Throwable e, String funName) {
         functionCache.remove(funName);
-        failedFunctions.add(funName);
+
+        ExceptionHandler.debugLog("由于开启了 debug 模式，此次脚本运行不会被记录为失败");
+        if (!RykenSlimefunCustomizer.INSTANCE.getConfig().getBoolean("debug")) {
+            failedFunctions.add(funName);
+        }
 
         ExceptionHandler.handleError(
                 "在运行" + getAddon().getAddonName() + "的脚本" + getFile().getName() + "时发生错误", e);
