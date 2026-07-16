@@ -87,8 +87,7 @@ public abstract class ScriptEval {
                 .denyAccess(ProcessBuilder.class)
                 .denyAccess(ClassLoader.class)
                 .denyAccess(Permission.class)
-                .denyAccess(Permissions.class)
-                .denyAccess(Bukkit.class);
+                .denyAccess(Permissions.class);
 
         denyLuckPerms(builder);
         denyGroupManager(builder);

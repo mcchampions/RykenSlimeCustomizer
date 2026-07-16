@@ -165,6 +165,7 @@ public class ProjectAddonLoader {
                 File file = new File(addon.getScriptsFolder(), scriptListener + ".js");
                 if (file.exists()) {
                     JavaScriptEval eval = JavaScriptEval.create(file, addon);
+                    if (eval != null) {
 
                     // First letter to uppercase
                     String listenerName = scriptListener.replaceFirst(
@@ -186,6 +187,10 @@ public class ProjectAddonLoader {
                         ExceptionHandler.info("成功注册附属 " + addon.getAddonId() + " 的监听脚本 " + file.getName() + "!");
                     } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
                         throw new RuntimeException(e);
+                    }
+                    } else {
+                        ExceptionHandler.handleWarning(
+                                "无法创建附属 " + addon.getAddonId() + " 的监听脚本 " + file.getName() + " 的 JavaScript 上下文！");
                     }
                 } else {
                     ExceptionHandler.handleWarning(
