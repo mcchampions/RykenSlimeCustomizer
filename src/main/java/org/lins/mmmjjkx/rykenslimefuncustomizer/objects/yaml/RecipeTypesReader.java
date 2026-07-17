@@ -26,6 +26,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.CustomRecipeType;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.yaml.machine.MultiBlockMachineReader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
@@ -45,7 +47,14 @@ public class RecipeTypesReader extends YamlReader<RecipeType> {
             return null;
         }
 
-        return new RecipeType(new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, s.toLowerCase()), item);
+        String bindToMultiblock = configurationSection.getString("bind-to-multiblock");
+        if (bindToMultiblock != null) {
+            return new CustomRecipeType(new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, s.toLowerCase()), item, (recipe, result) -> {
+                MultiBlockMachineReader.addPreaddRecipe(bindToMultiblock, recipe, item);
+            }, (a, b) -> {/* unregister recipe is not supported yet*/});
+        }
+
+        return new CustomRecipeType(new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, s.toLowerCase()), item);
     }
 
     // 配方类型不需要预加载物品

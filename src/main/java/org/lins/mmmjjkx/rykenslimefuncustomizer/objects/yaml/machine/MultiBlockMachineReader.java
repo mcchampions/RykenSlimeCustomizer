@@ -37,6 +37,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 public class MultiBlockMachineReader extends YamlReader<CustomMultiBlockMachine> {
+    private static final Map<String, Map<ItemStack[], ItemStack>> preaddRecipes = new HashMap<>();
     public MultiBlockMachineReader(YamlConfiguration config, ProjectAddon addon) {
         super(config, addon);
     }
@@ -141,8 +142,17 @@ public class MultiBlockMachineReader extends YamlReader<CustomMultiBlockMachine>
         return List.of(new SlimefunItemStack(addon.getId(s, section.getString("id_alias")), stack));
     }
 
+    public static Map<ItemStack[], ItemStack> getPreaddRecipes(String s) {
+        return preaddRecipes.getOrDefault(s, new HashMap<>());
+    }
+
+    public static void addPreaddRecipe(String s, ItemStack[] input, ItemStack output) {
+        preaddRecipes.computeIfAbsent(s, k -> new HashMap<>()).put(input, output);
+    }
+
     private Map<ItemStack[], ItemStack> readRecipes(String s, ConfigurationSection section, ProjectAddon addon) {
         Map<ItemStack[], ItemStack> map = new HashMap<>();
+        map.putAll(getPreaddRecipes(s));
         if (section == null) return map;
 
         for (String key : section.getKeys(false)) {
