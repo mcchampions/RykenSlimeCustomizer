@@ -50,7 +50,7 @@ public class RecipeTypesReader extends YamlReader<RecipeType> {
         String bindToMultiblock = configurationSection.getString("bind-to-multiblock");
         if (bindToMultiblock != null) {
             return new CustomRecipeType(new NamespacedKey(RykenSlimefunCustomizer.INSTANCE, s.toLowerCase()), item, (recipe, result) -> {
-                MultiBlockMachineReader.addPreaddRecipe(bindToMultiblock, recipe, item);
+                MultiBlockMachineReader.addPreaddRecipe(bindToMultiblock, recipe, result);
             }, (a, b) -> {/* unregister recipe is not supported yet*/});
         }
 

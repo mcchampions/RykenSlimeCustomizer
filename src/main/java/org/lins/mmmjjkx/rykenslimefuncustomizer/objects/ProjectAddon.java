@@ -35,6 +35,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
@@ -152,13 +153,15 @@ public final class ProjectAddon {
     }
 
     public void unregister() {
-        scriptEvals.forEach(JavaScriptEval::close);
         itemGroups.forEach(ig -> Slimefun.getRegistry().getAllItemGroups().remove(ig));
         menus.forEach(m -> Slimefun.getRegistry().getMenuPresets().remove(m.getID()));
         items.forEach(this::unregisterItem);
         mobDrops.forEach(md -> {
             unregisterItem(md);
-            Slimefun.getRegistry().getMobDrops().get(md.getEntityType()).removeAll(md.getDrops());
+            var set = Slimefun.getRegistry().getMobDrops().get(md.getEntityType());
+            if (set != null) {
+                set.removeAll(md.getDrops());
+            }
         });
         capacitors.forEach(this::unregisterItem);
         foods.forEach(this::unregisterItem);
@@ -215,6 +218,11 @@ public final class ProjectAddon {
             if (config.onReloadHandler() != null) {
                 config.onReloadHandler().close();
             }
+        }
+
+        if (eventListener != null) {
+            HandlerList.unregisterAll(eventListener);
+            eventListener = null;
         }
     }
 

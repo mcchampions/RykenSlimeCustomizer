@@ -97,14 +97,6 @@ public class JavaScriptEval extends ScriptEval {
     }
 
     @Override
-    public void close() {
-        try {
-            jsEngine.close();
-        } catch (IllegalStateException ignored) {
-        }
-    }
-
-    @Override
     public void addThing(String name, Object value) {
         jsEngine.getBindings("js").putMember(name, value);
     }
@@ -157,6 +149,11 @@ public class JavaScriptEval extends ScriptEval {
             handleExecutionError(e, funName);
         }
         return null;
+    }
+
+    @Override
+    public void close() {
+        // don't close jsEngine, since we just reload the plugin, not the js engine.
     }
 
     private void handleExecutionError(Throwable e, String funName) {

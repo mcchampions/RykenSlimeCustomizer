@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "org.lins.mmmjjkx"
-version = "27.5-Modified"
+version = "28.0-Modified"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
