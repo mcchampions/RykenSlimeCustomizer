@@ -50,11 +50,9 @@ import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.mocks.MockObject;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.enhanced.NBTAPIIntegration;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.CiConsumer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.CiFunction;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 @Getter(AccessLevel.PROTECTED)
 public abstract class ScriptEval {
@@ -192,20 +190,12 @@ public abstract class ScriptEval {
         addThing("getServer", (Supplier<Server>) () -> getServer());
 
         addThing("runOpCommand", (BiConsumer<Player, String>) (p, s) -> {
-            if (!(p instanceof MockObject.Restriction restriction)) {
-                ExceptionHandler.handleError(
-                        "You have to use getPlayer(String) or getPlayer(UUID) to get a player instance. This runOpCommand operation has been cancelled");
-                return;
-            }
-
-            restriction.disableRestriction();
             boolean op = p.isOp();
             p.setOp(true);
             try {
                 p.performCommand(parsePlaceholder(p, s));
             } finally {
                 p.setOp(op);
-                restriction.enableRestriction();
             }
         });
 
