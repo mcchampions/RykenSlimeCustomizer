@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
+import java.util.function.Supplier;
 import net.byteflux.libby.BukkitLibraryManager;
 import net.byteflux.libby.Library;
 import net.guizhanss.guizhanlib.updater.GuizhanBuildsUpdater;
@@ -107,6 +107,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
                                 .forEach(path -> {
                                     try {
                                         File file = path.toFile();
+                                        debug(() -> "Loading saveditem: "+ file.toPath().toAbsolutePath());
                                         YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
                                         ItemStack item = config.getItemStack("item");
                                         if (item == null) {
@@ -147,6 +148,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         if (getConfig().getBoolean("pluginUpdate", false)
                 && getDescription().getVersion().startsWith("Build")
                 && getServer().getPluginManager().isPluginEnabled("GuizhanLibPlugin")) {
+            debug(() -> "Loading updater...");
             GuizhanBuildsUpdater.start(this, getFile(), "balugaq", "RykenSlimeCustomizer", "main");
         }
 
@@ -300,6 +302,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
     }
 
     public static void saveExample() {
+        debug(() -> "Saving example addon");
         String head = "addons/example/info.yml";
 
         String filePath = new File(INSTANCE.getDataFolder(), head).getAbsolutePath();
@@ -308,5 +311,9 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         if (!Files.exists(path)) {
             INSTANCE.saveResource(head, true);
         }
+    }
+
+    public static void debug(Supplier<String> supplier) {
+        ExceptionHandler.debugLog(supplier);
     }
 }

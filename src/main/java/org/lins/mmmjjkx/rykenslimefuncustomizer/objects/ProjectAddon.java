@@ -56,7 +56,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 @Getter
 @Setter(AccessLevel.PACKAGE)
 public final class ProjectAddon {
-    private boolean markAsDepend = false;
+    private boolean markedAsDepend = false;
 
     // info.yml
     private @NotNull final String addonId;

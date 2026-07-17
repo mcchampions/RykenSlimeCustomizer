@@ -178,14 +178,20 @@ public abstract class ScriptEval {
         }
     }
 
+    private static final Server mockedServer = MockObject.mock(Bukkit.getServer());
+
+    private static Server getServer() {
+        return mockedServer;
+    }
+
     protected final void setup() {
-        addThing("server", MockObject.mock(Bukkit.getServer()));
+        addThing("server", getServer());
 
         // functions
         addThing("isPluginLoaded", (Function<String, Boolean>)
                 s -> Bukkit.getPluginManager().isPluginEnabled(s));
 
-        addThing("getServer", (Supplier<Server>) () -> MockObject.mock(Bukkit.getServer()));
+        addThing("getServer", (Supplier<Server>) () -> getServer());
 
         addThing("runOpCommand", (BiConsumer<Player, String>) (p, s) -> {
             if (!(p instanceof MockObject.Restriction restriction)) {
