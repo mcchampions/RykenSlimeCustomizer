@@ -12,12 +12,12 @@ group = "org.lins.mmmjjkx"
 version = "28.0-Modified"
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }
 
 tasks.compileJava {
     options.encoding = "UTF-8"
-    options.release.set(17)
+    options.release.set(25)
 }
 
 repositories {
@@ -63,7 +63,7 @@ dependencies {
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
     compileOnly(libs.item.nbt.api.plugin)
-    compileOnly(files("lib/JustEnoughGuide v2.1.17.jar"))
+    compileOnly(files("lib/JustEnoughGuide vqs-frok.jar"))
 }
 
 tasks.jar {
