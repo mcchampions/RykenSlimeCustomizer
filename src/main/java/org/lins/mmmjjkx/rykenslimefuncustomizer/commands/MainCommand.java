@@ -158,7 +158,7 @@ public class MainCommand implements TabExecutor {
                 }
 
                 ProjectAddonLoader loader =
-                        new ProjectAddonLoader(file, RykenSlimefunCustomizer.addonManager.getProjectIds());
+                        new ProjectAddonLoader(file, RykenSlimefunCustomizer.addonManager.getProjectIds(), id);
                 ProjectAddon addon = loader.load();
                 RykenSlimefunCustomizer.addonManager.pushProjectAddon(addon);
 
@@ -263,7 +263,7 @@ public class MainCommand implements TabExecutor {
 
                 File folder = addon.getFolder();
                 ProjectAddonLoader pal =
-                        new ProjectAddonLoader(folder, RykenSlimefunCustomizer.addonManager.getProjectIds());
+                        new ProjectAddonLoader(folder, RykenSlimefunCustomizer.addonManager.getProjectIds(), prjId);
                 ProjectAddon addonNew = pal.load();
 
                 RykenSlimefunCustomizer.addonManager.pushProjectAddon(addonNew);

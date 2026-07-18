@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 import net.bytebuddy.ByteBuddy;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
@@ -53,16 +54,19 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 public class ProjectAddonLoader {
     private final Map<String, File> ids;
     private final File file;
+    private final String id;
 
-    public ProjectAddonLoader(File dir, Map<String, File> ids) {
+    public ProjectAddonLoader(File dir, Map<String, File> ids, String id) {
         Validate.notNull(dir, "File cannot be null!");
         Validate.isTrue(dir.isDirectory(), "File must be a directory!");
 
         this.file = dir;
         this.ids = ids;
+        this.id = id;
     }
 
     @Nullable public ProjectAddon load() {
+        debug(() -> "Loading addon " + id);
         ProjectAddon addon;
         YamlConfiguration info = doFileLoad(file, Constants.INFO_FILE);
 
@@ -164,6 +168,7 @@ public class ProjectAddonLoader {
             if (!scriptListener.isBlank()) {
                 File file = new File(addon.getScriptsFolder(), scriptListener + ".js");
                 if (file.exists()) {
+                    debug(() -> "Creating script listener");
                     JavaScriptEval eval = JavaScriptEval.create(file, addon);
                     if (eval != null) {
 
@@ -230,6 +235,7 @@ public class ProjectAddonLoader {
 
                 File scriptHandler = new File(addon.getScriptsFolder(), "configHandler.js");
                 ScriptEval eval = scriptHandler.exists() ? JavaScriptEval.create(scriptHandler, addon) : null;
+                if (eval != null) debug(() -> "Creating config handler script");
                 CustomAddonConfig customConfigObj = new CustomAddonConfig(customConfig, customConfigYaml, eval);
 
                 YamlConfiguration dest = YamlConfiguration.loadConfiguration(customConfig);
@@ -244,6 +250,7 @@ public class ProjectAddonLoader {
             }
 
             String idPattern = info.getString("idPattern");
+            debug(() -> "Find id pattern: " + idPattern);
             if (idPattern != null && !idPattern.isBlank()) {
                 if (idPattern.contains("%0")) {
                     addon.setIdPattern(idPattern);
@@ -423,7 +430,7 @@ public class ProjectAddonLoader {
 
             if (ids.containsKey(dependency)) {
                 File dependencyFile = ids.get(dependency);
-                ProjectAddonLoader loader = new ProjectAddonLoader(dependencyFile, ids);
+                ProjectAddonLoader loader = new ProjectAddonLoader(dependencyFile, ids, dependency);
 
                 if (RykenSlimefunCustomizer.addonManager.isLoaded(dependency)) {
                     continue;
@@ -431,7 +438,7 @@ public class ProjectAddonLoader {
 
                 ProjectAddon addon = loader.load();
                 if (addon != null) {
-                    addon.setMarkAsDepend(true);
+                    addon.setMarkedAsDepend(true);
                     RykenSlimefunCustomizer.addonManager.pushProjectAddon(addon);
                 }
             } else {
@@ -447,5 +454,9 @@ public class ProjectAddonLoader {
             return new YamlConfiguration();
         }
         return YamlConfiguration.loadConfiguration(dest);
+    }
+
+    private void debug(Supplier<String> message) {
+        ExceptionHandler.debugLog(message.get());
     }
 }

@@ -24,7 +24,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 import net.byteflux.libby.BukkitLibraryManager;
 import net.byteflux.libby.Library;
 import net.guizhanss.guizhanlib.updater.GuizhanBuildsUpdater;
@@ -72,7 +73,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
             saveExample();
         }
 
-        Objects.requireNonNull(getCommand("rykenslimecustomizer")).setExecutor(new MainCommand());
+        getCommand("rykenslimefuncustomizer").setExecutor(new MainCommand());
 
         addonManager.setup(this);
 
@@ -119,15 +120,16 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         }
 
         if (getConfig().getBoolean("pluginUpdate", false)
-                && getDescription().getVersion().startsWith("b")
+                && getDescription().getVersion().startsWith("Build")
                 && getServer().getPluginManager().isPluginEnabled("GuizhanLibPlugin")) {
-            GuizhanBuildsUpdater.start(this, getFile(), "SlimefunReloadingProject", "RykenSlimeCustomizer", "main");
+            debug(() -> "Loading updater...");
+            GuizhanBuildsUpdater.start(this, getFile(), "balugaq", "RykenSlimeCustomizer", "main");
         }
 
         getServer().getScheduler().runTaskLater(this, () -> runtime = true, 1);
 
         ExceptionHandler.info("============================");
-        ExceptionHandler.info("RykenSlimeCustomizer加载成功！");
+        ExceptionHandler.info("RykenSlimefunCustomizer加载成功！");
         ExceptionHandler.info("原作者: lijinhong11");
         ExceptionHandler.info("改作者: balugaq");
         ExceptionHandler.info("项目主页: https://github.com/balugaq/RykenSlimeCustomizer");
@@ -274,6 +276,7 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
     }
 
     public static void saveExample() {
+        debug(() -> "Saving example addon");
         String head = "addons/example/info.yml";
 
         String filePath = new File(INSTANCE.getDataFolder(), head).getAbsolutePath();
@@ -282,5 +285,9 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
         if (!Files.exists(path)) {
             INSTANCE.saveResource(head, true);
         }
+    }
+
+    public static void debug(Callable<String> callable) {
+        ExceptionHandler.debugLog(callable);
     }
 }

@@ -20,9 +20,12 @@ package org.lins.mmmjjkx.rykenslimefuncustomizer;
 import io.github.thebusybiscuit.slimefun4.libraries.commons.lang.Validate;
 import java.io.File;
 import java.util.*;
+import java.util.function.Supplier;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddonLoader;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.global.RecipeTypeMap;
@@ -37,6 +40,10 @@ public final class ProjectAddonManager {
 
     @Getter
     private final Map<String, File> projectIds = new HashMap<>();
+
+    @Getter
+    @Setter
+    @Nullable private String loadingAddon;
 
     public ProjectAddonManager() {
         ADDONS_DIRECTORY = new File(RykenSlimefunCustomizer.INSTANCE.getDataFolder(), "addons");
@@ -65,6 +72,7 @@ public final class ProjectAddonManager {
     public void setup(Plugin inst) {
         File addons = new File(inst.getDataFolder(), "addons");
         if (!addons.exists()) {
+            debug(() -> "Created addons folder");
             addons.mkdirs();
             return;
         }
@@ -75,6 +83,7 @@ public final class ProjectAddonManager {
         List<String> skip = new ArrayList<>();
 
         for (File folder : folders) {
+            debug(() -> "Loading addon folder " + folder.getName());
             if (folder.isFile()) {
                 ExceptionHandler.handleError(folder.getName() + " 不是文件夹！无法加载此附属！");
                 continue;
@@ -107,7 +116,7 @@ public final class ProjectAddonManager {
                     continue;
                 }
 
-                if (addon.isMarkAsDepend()) {
+                if (addon.isMarkedAsDepend()) {
                     continue;
                 }
 
@@ -130,11 +139,13 @@ public final class ProjectAddonManager {
             }
 
             try {
-                ProjectAddonLoader loader = new ProjectAddonLoader(folder, projectIds);
+                ProjectAddonLoader loader = new ProjectAddonLoader(folder, projectIds, id);
+                setLoadingAddon(id);
                 ProjectAddon addon = loader.load();
                 if (addon != null) {
                     projectAddons.put(addon.getAddonId(), addon);
                 }
+                setLoadingAddon(null);
             } catch (Exception e) {
                 if (folder.isFile()) {
                     ExceptionHandler.handleError(folder.getName() + " 不是文件夹！无法加载此附属！");
@@ -200,5 +211,9 @@ public final class ProjectAddonManager {
 
     public File getAddonFolder(String id) {
         return projectIds.get(id);
+    }
+
+    private void debug(Supplier<String> message) {
+        ExceptionHandler.debugLog(message.get());
     }
 }

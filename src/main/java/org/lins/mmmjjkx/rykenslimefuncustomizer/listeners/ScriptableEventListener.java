@@ -1819,7 +1819,11 @@ public class ScriptableEventListener implements Listener {
                 return;
             }
 
-            Bukkit.getScheduler().runTask(RykenSlimefunCustomizer.INSTANCE, () -> eval.evalFunction(methodName, event));
+            Bukkit.getScheduler().runTask(RykenSlimefunCustomizer.INSTANCE, () -> {
+                if (eval != null) {
+                    eval.evalFunction(methodName, event);
+                }
+            });
         }
     }
 }

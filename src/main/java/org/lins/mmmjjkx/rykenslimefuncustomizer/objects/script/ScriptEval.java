@@ -50,11 +50,9 @@ import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.mocks.MockObject;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.enhanced.NBTAPIIntegration;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.CiConsumer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.CiFunction;
-import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
 
 @Getter(AccessLevel.PROTECTED)
 public abstract class ScriptEval {
@@ -177,30 +175,26 @@ public abstract class ScriptEval {
         }
     }
 
+    private static Server getServer() {
+        return Bukkit.getServer();
+    }
+
     protected final void setup() {
-        addThing("server", MockObject.mock(Bukkit.getServer()));
+        addThing("server", getServer());
 
         // functions
         addThing("isPluginLoaded", (Function<String, Boolean>)
                 s -> Bukkit.getPluginManager().isPluginEnabled(s));
 
-        addThing("getServer", (Supplier<Server>) () -> MockObject.mock(Bukkit.getServer()));
+        addThing("getServer", (Supplier<Server>) () -> getServer());
 
         addThing("runOpCommand", (BiConsumer<Player, String>) (p, s) -> {
-            if (!(p instanceof MockObject.Restriction restriction)) {
-                ExceptionHandler.handleError(
-                        "You have to use getPlayer(String) or getPlayer(UUID) to get a player instance. This runOpCommand operation has been cancelled");
-                return;
-            }
-
-            restriction.disableRestriction();
             boolean op = p.isOp();
             p.setOp(true);
             try {
                 p.performCommand(parsePlaceholder(p, s));
             } finally {
                 p.setOp(op);
-                restriction.enableRestriction();
             }
         });
 
@@ -247,10 +241,10 @@ public abstract class ScriptEval {
         // removal
         addThing("setData", (CiConsumer<Location, String, String>) StorageCacheUtils::setData);
         addThing("getData", (BiFunction<Location, String, String>)
-                (a, b) -> MockObject.mock(StorageCacheUtils.getData(a, b)));
-        addThing("getBlockMenu", (Function<Location, BlockMenu>) a -> MockObject.mock(StorageCacheUtils.getMenu(a)));
+                (a, b) -> StorageCacheUtils.getData(a, b));
+        addThing("getBlockMenu", (Function<Location, BlockMenu>) a -> StorageCacheUtils.getMenu(a));
         addThing("getBlockData", (Function<Location, SlimefunBlockData>)
-                a -> MockObject.mock(StorageCacheUtils.getBlock(a)));
+                a -> StorageCacheUtils.getBlock(a));
         addThing("isSlimefunBlock", (Function<Location, Boolean>) StorageCacheUtils::hasBlock);
         addThing("isBlock", (BiFunction<Location, String, Boolean>) StorageCacheUtils::isBlock);
         addThing("getSfItemByBlock", (Function<Location, SlimefunItem>) StorageCacheUtils::getSfItem);

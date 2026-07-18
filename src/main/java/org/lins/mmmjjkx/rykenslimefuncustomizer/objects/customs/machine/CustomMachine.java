@@ -17,8 +17,12 @@
  */
 package org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine;
 
+import com.xzavier0722.mc.plugin.slimefun4.storage.callback.IAsyncReadCallback;
 import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunBlockData;
+import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunUniversalData;
+import com.xzavier0722.mc.plugin.slimefun4.storage.controller.attributes.UniversalBlock;
 import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
+import io.github.thebusybiscuit.slimefun4.api.events.PlayerRightClickEvent;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
@@ -30,11 +34,17 @@ import io.github.thebusybiscuit.slimefun4.core.handlers.BlockUseHandler;
 import io.github.thebusybiscuit.slimefun4.core.machines.MachineOperation;
 import io.github.thebusybiscuit.slimefun4.core.machines.MachineProcessor;
 import io.github.thebusybiscuit.slimefun4.core.networks.energy.EnergyNetComponentType;
+import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import java.util.List;
+import javax.annotation.ParametersAreNonnullByDefault;
 import lombok.Getter;
 import me.mrCookieSlime.Slimefun.Objects.handlers.BlockTicker;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
+import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset;
+import me.mrCookieSlime.Slimefun.api.inventory.DirtyChestMenu;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemStack;
@@ -57,6 +67,10 @@ public class CustomMachine extends AbstractEmptyMachine<MachineOperation> implem
 
     @Getter
     private final CustomMenu menu;
+
+    public SlimefunItem getSlimefunItem() {
+        return this;
+    }
 
     public CustomMachine(
             ItemGroup itemGroup,
@@ -90,7 +104,14 @@ public class CustomMachine extends AbstractEmptyMachine<MachineOperation> implem
                             CustomMachine.this.eval.evalFunction("onPlace", e);
                         }
                     },
-                    (BlockUseHandler) e -> CustomMachine.this.eval.evalFunction("onUse", e),
+                    (BlockUseHandler) e -> {
+                        CustomMachine.this.eval.evalFunction("onUse", e);
+                        if (!e.getInteractEvent().isCancelled()) {
+                            if (BlockMenuPreset.isInventory(CustomMachine.this.getId())) {
+                                openInventory(e.getPlayer(), getSlimefunItem(), e.getInteractEvent().getClickedBlock(), e);
+                            }
+                        }
+                    },
                     new BlockBreakHandler(false, false) {
                         @Override
                         public void onPlayerBreak(
@@ -166,5 +187,84 @@ public class CustomMachine extends AbstractEmptyMachine<MachineOperation> implem
     @NotNull @Override
     public MachineProcessor<MachineOperation> getMachineProcessor() {
         return processor;
+    }
+
+    @ParametersAreNonnullByDefault
+    private void openInventory(Player p, SlimefunItem item, Block clickedBlock, PlayerRightClickEvent event) {
+        try {
+            if (!p.isSneaking() || event.getItem().getType() == Material.AIR) {
+                event.getInteractEvent().setCancelled(true);
+
+                if (item instanceof UniversalBlock) {
+                    var uniData = StorageCacheUtils.getUniversalBlock(clickedBlock);
+
+                    if (uniData == null) {
+                        return;
+                    }
+
+                    if (uniData.isDataLoaded()) {
+                        openMenu(uniData.getMenu(), clickedBlock, p);
+                    } else {
+                        Slimefun.getDatabaseManager()
+                                .getBlockDataController()
+                                .loadUniversalDataAsync(uniData, new IAsyncReadCallback<>() {
+                                    @Override
+                                    public boolean runOnMainThread() {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public void onResult(SlimefunUniversalData result) {
+                                        if (!p.isOnline()) {
+                                            return;
+                                        }
+
+                                        openMenu(result.getMenu(), clickedBlock, p);
+                                    }
+                                });
+                    }
+                } else {
+                    var blockData = StorageCacheUtils.getBlock(clickedBlock.getLocation());
+
+                    if (blockData == null) {
+                        return;
+                    }
+
+                    if (blockData.isDataLoaded()) {
+                        openMenu(blockData.getBlockMenu(), clickedBlock, p);
+                    } else {
+                        Slimefun.getDatabaseManager()
+                                .getBlockDataController()
+                                .loadBlockDataAsync(blockData, new IAsyncReadCallback<>() {
+                                    @Override
+                                    public boolean runOnMainThread() {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public void onResult(SlimefunBlockData result) {
+                                        if (!p.isOnline()) {
+                                            return;
+                                        }
+
+                                        openMenu(result.getBlockMenu(), clickedBlock, p);
+                                    }
+                                });
+                    }
+                }
+            }
+        } catch (Exception | LinkageError x) {
+            item.error("An Exception was caught while trying to open the Inventory", x);
+        }
+    }
+
+    private void openMenu(DirtyChestMenu menu, Block b, Player p) {
+        if (menu != null) {
+            if (menu.canOpen(b, p)) {
+                menu.open(p);
+            } else {
+                Slimefun.getLocalization().sendMessage(p, "inventory.no-access", true);
+            }
+        }
     }
 }
