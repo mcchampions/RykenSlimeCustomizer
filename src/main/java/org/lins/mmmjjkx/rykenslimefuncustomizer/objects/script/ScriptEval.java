@@ -46,6 +46,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import org.graalvm.polyglot.HostAccess;
+import org.graalvm.polyglot.Value;
 import org.jetbrains.annotations.Nullable;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.RykenSlimefunCustomizer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.colors.CMIChatColor;
@@ -53,6 +54,7 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.enhanced.NBTAPIIntegration;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.CiConsumer;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.script.lambda.CiFunction;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 
 @Getter(AccessLevel.PROTECTED)
 public abstract class ScriptEval {
@@ -145,9 +147,9 @@ public abstract class ScriptEval {
         }
     }
 
-    private final File file;
-    private final ProjectAddon addon;
-    private String fileContext;
+    protected final File file;
+    protected final ProjectAddon addon;
+    protected String fileContext;
 
     public ScriptEval(File file, ProjectAddon addon) {
         this.file = file;
@@ -187,6 +189,7 @@ public abstract class ScriptEval {
                 s -> Bukkit.getPluginManager().isPluginEnabled(s));
 
         addThing("getServer", (Supplier<Server>) () -> getServer());
+        addThing("getSuperMultiBlockManager", (Supplier<SuperMultiBlockManager>) () -> SuperMultiBlockManager.getInstance());
 
         addThing("runOpCommand", (BiConsumer<Player, String>) (p, s) -> {
             boolean op = p.isOp();
@@ -348,7 +351,7 @@ public abstract class ScriptEval {
     }
 
     @CanIgnoreReturnValue
-    @Nullable public abstract Object evalFunction(String functionName, Object... args);
+    @Nullable public abstract Value evalFunction(String functionName, Object... args);
 
     public abstract void close();
 }

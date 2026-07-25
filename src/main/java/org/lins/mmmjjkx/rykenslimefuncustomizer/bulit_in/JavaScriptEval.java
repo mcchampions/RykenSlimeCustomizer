@@ -116,7 +116,7 @@ public class JavaScriptEval extends ScriptEval {
 
     @Nullable @CanIgnoreReturnValue
     @Override
-    public Object evalFunction(String funName, Object... args) {
+    public Value evalFunction(String funName, Object... args) {
         if (failedFunctions.contains(funName)) {
             return null;
         }
@@ -127,12 +127,14 @@ public class JavaScriptEval extends ScriptEval {
             Value bindings = jsEngine.getBindings("js");
 
             if (!bindings.hasMember(funName)) {
+                ExceptionHandler.debugLog(() -> "在附属" + addon.getAddonId() + "中加载脚本" + getFile().getName() + "时遇到了问题: " + "不存在函数 " + funName);
                 failedFunctions.add(funName);
                 return null;
             }
 
             Value member = bindings.getMember(funName);
             if (!member.canExecute()) {
+                ExceptionHandler.debugLog(() -> "在附属" + addon.getAddonId() + "中加载脚本" + getFile().getName() + "时遇到了问题: " + "函数 " + funName + " 不可执行");
                 failedFunctions.add(funName);
                 return null;
             }
@@ -142,7 +144,7 @@ public class JavaScriptEval extends ScriptEval {
         }
 
         try {
-            Object result = function.execute(args);
+            Value result = function.execute(args);
             if ("init".equals(funName)) {
                 cacheExecutableFunctions();
             }
@@ -180,9 +182,7 @@ public class JavaScriptEval extends ScriptEval {
         super.contextInit();
         if (jsEngine != null) {
             try {
-                functionCache.clear();
-                failedFunctions.clear();
-                executableFunctions.clear();
+                clearScriptCache();
 
                 jsEngine.eval(
                         Source.newBuilder("js", getFileContext(), "JavaScript").build());
@@ -205,5 +205,10 @@ public class JavaScriptEval extends ScriptEval {
                 failedFunctions.remove(memberName);
             }
         }
+    }
+    public void clearScriptCache() {
+        failedFunctions.clear();
+        functionCache.clear();
+            executableFunctions.clear();
     }
 }

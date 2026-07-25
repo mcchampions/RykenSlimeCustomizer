@@ -127,6 +127,24 @@ public class MainCommand implements TabExecutor {
                 player.sendMessage(CMIChatColor.translate("&c在您重新进入世界后，输入/rsc resaveitems end 以自动重新保存物品"));
                 player.sendMessage(
                         CMIChatColor.translate("&c保存会自动替换原文件，为避免保存失败，请做好plugins/RykenSlimefunCustomizer下的所有文件的备份"));
+            } else if (args[0].equalsIgnoreCase("clearScriptCache")) {
+                if (!sender.hasPermission("rsc.command") || !sender.hasPermission("rsc.command.clearscriptcache")) {
+                    sender.sendMessage(CMIChatColor.translate("&4你没有权限去做这些！"));
+                    return false;
+                }
+
+                RykenSlimefunCustomizer.clearScriptCache();
+                sender.sendMessage(CMIChatColor.translate("&a清除脚本缓存成功！"));
+                return true;
+            } else if (args[0].equalsIgnoreCase("cleardisplayprojectiles")) {
+                if (!sender.hasPermission("rsc.command") || !sender.hasPermission("rsc.command.cleardisplayprojectiles")) {
+                    sender.sendMessage(CMIChatColor.translate("&4你没有权限去做这些！"));
+                    return false;
+                }
+
+                RykenSlimefunCustomizer.clearDisplayProjectiles();
+                sender.sendMessage(CMIChatColor.translate("&a清除多方块显示实体成功！"));
+                return true;
             } else {
                 sender.sendMessage(CMIChatColor.translate("&4找不到此子指令！"));
                 return false;
@@ -509,7 +527,8 @@ public class MainCommand implements TabExecutor {
                     "saveitem",
                     "menupreview",
                     "getsaveditem",
-                    "resaveitems");
+                    "resaveitems",
+                    "clearScriptCache");
         } else if (args.length == 2) {
             return switch (args[0]) {
                 case "enable" ->
@@ -552,6 +571,8 @@ public class MainCommand implements TabExecutor {
                         &e/rsc saveitem <附属ID> <ID> 保存物品
                         &e/rsc menupreview <ID> 预览机器菜单
                         &e/rsc getsaveditem <附属ID> <ID> 获取保存的物品
-                        &e/rsc resaveitems 重新保存所有保存物品"""));
+                        &e/rsc resaveitems 重新保存所有保存物品
+                        &e/rsc clearScriptCache 清除脚本失败缓存
+                        &e/rsc cleardisplayprojectiles 清除多方块显示实体"""));
     }
 }
