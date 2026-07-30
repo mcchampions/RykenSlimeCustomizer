@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "org.lins.mmmjjkx"
-version = "28.2-Modified"
+version = "28.6-Modified"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(25))
@@ -63,7 +63,9 @@ dependencies {
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
     compileOnly(libs.item.nbt.api.plugin)
-    compileOnly(files("lib/JustEnoughGuide vqs-frok.jar"))
+
+    // System-scoped local JARs
+    compileOnly(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 }
 
 tasks.jar {
@@ -92,7 +94,8 @@ tasks.named<ProcessResources>("processResources") {
 }
 
 tasks.named<ShadowJar>("shadowJar") {
-    archiveBaseName.set("RykenSlimefunCustomizer")
+
+    archiveBaseName.set("RykenSlimeCustomizer") // Don't change it, it's used to fix build station identifier issue
     archiveVersion.set(project.version.toString())
     archiveClassifier.set("")
     relocate("io.github.projectunified.uniitem", "org.lins.mmmjjkx.rykenslimefuncustomizer.libraries.uniitem")

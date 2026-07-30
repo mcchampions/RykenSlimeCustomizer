@@ -18,15 +18,9 @@
 package org.lins.mmmjjkx.rykenslimefuncustomizer;
 
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
+import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.concurrent.Callable;
-import java.util.function.Supplier;
 import net.byteflux.libby.BukkitLibraryManager;
 import net.byteflux.libby.Library;
 import net.guizhanss.guizhanlib.updater.GuizhanBuildsUpdater;
@@ -39,7 +33,6 @@ import org.jetbrains.annotations.NotNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.SavedItemReference;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Entity;
-import org.jetbrains.annotations.NotNull;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.JavaScriptEval;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.bulit_in.SaveditemsGroup;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.commands.MainCommand;
@@ -48,20 +41,32 @@ import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.SingleItemRecipeGuideL
 import org.lins.mmmjjkx.rykenslimefuncustomizer.listeners.SuperMultiBlockListener;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.ProjectAddon;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.generations.BlockPopulator;
+import org.lins.mmmjjkx.rykenslimefuncustomizer.objects.customs.machine.CustomSuperMultiBlockMachine;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.super_multiblock.SuperMultiBlockManager;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.CommonUtils;
 import org.lins.mmmjjkx.rykenslimefuncustomizer.utils.ExceptionHandler;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.Callable;
 
 public final class RykenSlimefunCustomizer extends JavaPlugin implements SlimefunAddon {
     private static boolean runtime = false;
 
     public static RykenSlimefunCustomizer INSTANCE;
     public static ProjectAddonManager addonManager;
+    public static boolean jeg = false;
 
     @Override
     public void onLoad() {
         setupLibraries();
-        INSTANCE = this;
         System.setProperty("polyglot.engine.WarnInterpreterOnly", "false");
 
         File cache = new File(getDataFolder(), "cache");
@@ -95,6 +100,8 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
 
     @Override
     public void onEnable() {
+        INSTANCE = this;
+
         // Plugin startup logic
         CommonUtils.completeFile("config.yml");
 
@@ -116,7 +123,8 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
             world.getPopulators().add(new BlockPopulator());
         }
 
-        if (Bukkit.getPluginManager().isPluginEnabled("JustEnoughGuide")) {
+        jeg = Bukkit.getPluginManager().isPluginEnabled("JustEnoughGuide");
+        if (jeg) {
             ExceptionHandler.info("已检测到JustEnoughGuide，正在适配...");
             try {
                 SaveditemsGroup itemGroup = new SaveditemsGroup(
@@ -160,12 +168,57 @@ public final class RykenSlimefunCustomizer extends JavaPlugin implements Slimefu
 
         getServer().getScheduler().runTaskLater(this, () -> runtime = true, 1);
 
+        handleLogitech();
+
         ExceptionHandler.info("============================");
         ExceptionHandler.info("RykenSlimefunCustomizer加载成功！");
         ExceptionHandler.info("原作者: lijinhong11");
         ExceptionHandler.info("改作者: balugaq");
         ExceptionHandler.info("项目主页: https://github.com/balugaq/RykenSlimeCustomizer");
         ExceptionHandler.info("============================");
+    }
+
+    private void handleLogitech() {
+        if (!Bukkit.getPluginManager().isPluginEnabled("LogiTech")) return;
+
+        // Don't allow CustomSuperMultiBlockMachine to be stackable
+        Field field;
+        try {
+            field = Class.forName("me.matl114.logitech.core.Registries.RecipeSupporter").getDeclaredField("STACKMACHINE_LIST");
+        } catch (ClassNotFoundException | NoSuchFieldException ignored) {
+            try {
+                field = Class.forName("me.matl114.logitech.Utils.RecipeSupporter").getDeclaredField("STACKMACHINE_LIST");
+            } catch (ClassNotFoundException | NoSuchFieldException ignored2) {
+                ExceptionHandler.debugLog(() -> "无法自动禁用超级多方块机器在逻辑工艺中的可堆叠属性!");
+                field = null;
+            }
+        }
+        if (field == null) return;
+        field.setAccessible(true);
+        Map<SlimefunItem, Integer> STACKMACHINE_LIST;
+        try {
+            STACKMACHINE_LIST = (Map<SlimefunItem, Integer>) field.get(null);
+        } catch (IllegalAccessException e) {
+            ExceptionHandler.debugLog(() -> "无法自动禁用超级多方块机器在逻辑工艺中的可堆叠属性!");
+            return;
+        }
+
+        Bukkit.getScheduler().runTaskLaterAsynchronously(RykenSlimefunCustomizer.INSTANCE, () -> {
+            for (var sf : new ArrayList<>(Slimefun.getRegistry().getAllSlimefunItems())) {
+                if (!(sf instanceof CustomSuperMultiBlockMachine csmbm)) continue;
+                try {
+                    STACKMACHINE_LIST.remove(csmbm);
+                    ExceptionHandler.debugLog(() -> "已删除STACKMACHINE_LIST中的" + csmbm);
+                } catch (Throwable ignored) {
+                    try {
+                        STACKMACHINE_LIST.remove(csmbm);
+                        ExceptionHandler.debugLog(() -> "已删除STACKMACHINE_LIST中的" + csmbm);
+                    } catch (Throwable ignored2) {
+                        ExceptionHandler.debugLog(() -> "无法删除STACKMACHINE_LIST中的" + csmbm);
+                    }
+                }
+            }
+        }, 3L);
     }
 
     @Override
